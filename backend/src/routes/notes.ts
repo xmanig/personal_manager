@@ -230,4 +230,74 @@ router.post('/notes/:id/summarize', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/notes/smart-search', async (req: Request, res: Response) => {
+  try {
+    const { query } = req.body;
+
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      res.status(400).json({ error: 'Search query is required' });
+      return;
+    }
+
+    const notes = await prisma.note.findMany({
+      include: { tags: true, folder: true },
+      take: 50,
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    if (notes.length === 0) {
+      res.json({ notes: [], method: 'empty' });
+      return;
+    }
+
+    try {
+      const { chatCompletion } = await import('../services/ai');
+
+      const notesContext = notes
+        .map(
+          (n, i) =>
+            `[${i}] Title: "${n.title}"\nContent: "${(n.content || '').substring(0, 200)}"`
+        )
+        .join('\n\n');
+
+      const response = await chatCompletion([
+        {
+          role: 'system',
+          content: `You are a search assistant. Given a user query and a list of notes, return the indices of the most relevant notes, ranked by relevance. Return ONLY a JSON array of indices, e.g. [0, 2, 5]. If no notes are relevant, return [].`,
+        },
+        {
+          role: 'user',
+          content: `Query: "${query}"\n\nNotes:\n${notesContext}`,
+        },
+      ]);
+
+      const indices: number[] = JSON.parse(response.replace(/```json\n?|\n?```/g, '').trim());
+      const rankedNotes = indices.map((i) => notes[i]).filter(Boolean);
+
+      res.json({ notes: rankedNotes, method: 'ai' });
+    } catch (aiError) {
+      console.warn('AI search failed, falling back to text search:', aiError);
+
+      const searchTerm = query
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t: string) => `${t}:*`)
+        .join(' & ');
+
+      const results = await prisma.$queryRaw`
+        SELECT n.*
+        FROM "Note" n
+        WHERE to_tsvector('english', coalesce(n.title, '') || ' ' || coalesce(n.content, '')) 
+              @@ to_tsquery('english', ${searchTerm})
+        LIMIT 20
+      `;
+
+      res.json({ notes: results, method: 'fallback' });
+    }
+  } catch (error) {
+    console.error('Error in smart search:', error);
+    res.status(500).json({ error: 'Failed to perform smart search' });
+  }
+});
+
 export default router;
