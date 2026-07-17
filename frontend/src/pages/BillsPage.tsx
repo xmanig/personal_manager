@@ -45,6 +45,19 @@ export function BillsPage() {
     await loadBills();
   };
 
+  const handleRevokePaid = async (bill: Bill) => {
+    await updateBill(bill.id, { status: 'pending', paidDate: null });
+    await loadBills();
+  };
+
+  const handleMarkAllPaid = async (bills: Bill[]) => {
+    const pending = bills.filter((b) => b.status === 'pending');
+    for (const bill of pending) {
+      await updateBill(bill.id, { status: 'paid', paidDate: new Date().toISOString() });
+    }
+    await loadBills();
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this bill?')) return;
     await deleteBill(id);
@@ -144,14 +157,29 @@ export function BillsPage() {
               }
               return Object.entries(groups).map(([month, bills]) => (
                 <div key={month}>
-                  <div className="sticky top-0 z-10 bg-white px-5 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-950 dark:text-gray-300">
-                    {new Date(month + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+                  <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-5 py-2 dark:bg-gray-950">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {new Date(month + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+                    </span>
+                    {bills.some((b) => b.status === 'pending') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMarkAllPaid(bills)}
+                      >
+                        <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        Mark All Paid
+                      </Button>
+                    )}
                   </div>
                   {bills.map((bill) => (
                     <BillRow
                       key={bill.id}
                       bill={bill}
                       onMarkPaid={handleMarkPaid}
+                      onRevokePaid={handleRevokePaid}
                       onEdit={setEditingBill}
                       onDelete={handleDelete}
                       statusBadge={statusBadge}
@@ -177,10 +205,11 @@ export function BillsPage() {
 }
 
 function BillRow({
-  bill, onMarkPaid, onEdit, onDelete, statusBadge, API_BASE
+  bill, onMarkPaid, onRevokePaid, onEdit, onDelete, statusBadge, API_BASE
 }: {
   bill: Bill;
   onMarkPaid: (bill: Bill) => void;
+  onRevokePaid: (bill: Bill) => void;
   onEdit: (bill: Bill) => void;
   onDelete: (id: string) => void;
   statusBadge: (s: string) => 'success' | 'warning' | 'danger' | 'default';
@@ -211,8 +240,20 @@ function BillRow({
             PDF
           </a>
         )}
-        {bill.status !== 'paid' && (
-          <Button variant="ghost" size="sm" onClick={() => onMarkPaid(bill)}>Mark Paid</Button>
+        {bill.status === 'paid' ? (
+          <Button variant="ghost" size="sm" onClick={() => onRevokePaid(bill)} className="text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20">
+            <svg className="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+            Revoke
+          </Button>
+        ) : (
+          <Button variant="ghost" size="sm" onClick={() => onMarkPaid(bill)}>
+            <svg className="mr-1 h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Mark Paid
+          </Button>
         )}
         <Button variant="ghost" size="sm" onClick={() => onEdit(bill)}>Edit</Button>
         <Button variant="ghost" size="sm" onClick={() => onDelete(bill.id)}>
