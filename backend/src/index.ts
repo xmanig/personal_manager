@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import authRoutes from './routes/auth';
 import notesRoutes from './routes/notes';
+import tagsRoutes from './routes/tags';
+import foldersRoutes from './routes/folders';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -18,6 +20,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api', authRoutes);
 app.use('/api', notesRoutes);
+app.use('/api', tagsRoutes);
+app.use('/api', foldersRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
