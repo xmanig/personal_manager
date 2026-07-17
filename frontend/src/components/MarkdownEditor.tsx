@@ -74,21 +74,23 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2.5">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2.5 dark:border-gray-800">
         <input
           type="text"
           value={title}
           onChange={handleTitleChange}
           placeholder="Untitled"
-          className="flex-1 bg-transparent text-lg font-semibold text-gray-900 placeholder-gray-300 outline-none"
+          className="flex-1 bg-transparent text-lg font-semibold text-gray-900 placeholder-gray-300 outline-none dark:text-gray-100 dark:placeholder-gray-600"
         />
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-gray-200">
+          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setShowPreview(false)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                !showPreview ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                !showPreview
+                  ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
               Write
@@ -96,13 +98,15 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
             <button
               onClick={() => setShowPreview(true)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                showPreview ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                showPreview
+                  ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
               Preview
             </button>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
             {saveStatus === 'saving' && (
               <div className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
             )}
@@ -110,7 +114,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
               <div className="h-2 w-2 rounded-full bg-emerald-400" />
             )}
             {saveStatus === 'unsaved' && (
-              <div className="h-2 w-2 rounded-full bg-gray-300" />
+              <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
             )}
             <span>
               {saveStatus === 'saving'
@@ -125,7 +129,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 border-b border-gray-100 px-4 py-1.5">
+      <div className="flex items-center gap-1 border-b border-gray-100 px-4 py-1.5 dark:border-gray-800">
         <ToolbarButton onClick={() => insertMarkdown('**', '**')} title="Bold">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
@@ -141,7 +145,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 7.5l10.5-5.25L23 7.5m-20.25 0v9m20.25-9l-10.5 5.25M2.25 7.5l10.5 5.25" />
           </svg>
         </ToolbarButton>
-        <div className="mx-1 h-4 w-px bg-gray-200" />
+        <div className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
         <ToolbarButton onClick={() => insertMarkdown('[', '](url)')} title="Link">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.318a4.5 4.5 0 00-6.364-6.364L4.757 8.25a4.5 4.5 0 006.364 6.364l4.5-4.5z" />
@@ -162,7 +166,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
       <div className="flex-1 overflow-hidden">
         {showPreview ? (
           <div className="h-full overflow-y-auto px-6 py-4">
-            <div className="prose max-w-3xl">
+            <div className="prose max-w-3xl dark:text-gray-300">
               <ReactMarkdown>{content}</ReactMarkdown>
             </div>
           </div>
@@ -171,7 +175,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
             value={content}
             onChange={handleContentChange}
             placeholder="Start writing in Markdown..."
-            className="h-full w-full resize-none border-none bg-white px-6 py-4 font-mono text-sm text-gray-700 placeholder-gray-300 outline-none"
+            className="h-full w-full resize-none border-none bg-white px-6 py-4 font-mono text-sm text-gray-700 placeholder-gray-300 outline-none dark:bg-gray-950 dark:text-gray-300 dark:placeholder-gray-600"
           />
         )}
       </div>
@@ -192,7 +196,7 @@ function ToolbarButton({
     <button
       onClick={onClick}
       title={title}
-      className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+      className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
     >
       {children}
     </button>

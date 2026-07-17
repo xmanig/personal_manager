@@ -59,16 +59,16 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+      <div className="flex h-full items-center justify-center dark:bg-gray-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-primary-900 dark:border-t-primary-400" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-        <h2 className="text-sm font-semibold text-gray-900">Notes</h2>
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notes</h2>
         <Button size="sm" onClick={handleCreateNote}>
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -77,9 +77,9 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
         </Button>
       </div>
 
-      <div className="border-b border-gray-200 px-4 py-3">
+      <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <input
@@ -87,19 +87,19 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
             placeholder="Search notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-primary-500 dark:focus:bg-gray-900 dark:focus:ring-primary-900/50"
           />
         </div>
       </div>
 
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 border-b border-gray-200 px-4 py-3">
+        <div className="flex flex-wrap gap-1.5 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
           <button
             onClick={() => setSelectedTagId(null)}
             className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
               !selectedTagId
-                ? 'bg-primary-100 text-primary-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
             All
@@ -110,8 +110,8 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
               onClick={() => setSelectedTagId(selectedTagId === tag.id ? null : tag.id)}
               className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                 selectedTagId === tag.id
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
               }`}
             >
               {tag.name}
@@ -122,7 +122,7 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
 
       <div className="flex-1 overflow-y-auto">
         {error && (
-          <div className="m-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
+          <div className="m-4 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">{error}</div>
         )}
 
         {notes.length === 0 ? (
@@ -141,21 +141,23 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
             }
           />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {notes.map((note) => (
               <button
                 key={note.id}
                 onClick={() => onSelectNote(note)}
-                className={`w-full px-4 py-3.5 text-left transition-all hover:bg-gray-50 ${
-                  selectedNoteId === note.id ? 'bg-primary-50 border-l-2 border-l-primary-500' : ''
+                className={`w-full px-4 py-3.5 text-left transition-all hover:bg-gray-50 dark:hover:bg-gray-900 ${
+                  selectedNoteId === note.id
+                    ? 'border-l-2 border-l-primary-500 bg-primary-50 dark:border-l-primary-400 dark:bg-primary-900/20'
+                    : ''
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-medium text-gray-900">
+                    <h3 className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                       {note.title || 'Untitled'}
                     </h3>
-                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                    <p className="mt-1 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
                       {note.content?.slice(0, 120) || 'Empty note'}
                     </p>
                     {note.tags && note.tags.length > 0 && (
@@ -163,13 +165,11 @@ export function NotesList({ onSelectNote, selectedNoteId }: NotesListProps) {
                         {note.tags.slice(0, 3).map((tag) => (
                           <Badge key={tag.id}>{tag.name}</Badge>
                         ))}
-                        {note.tags.length > 3 && (
-                          <Badge>+{note.tags.length - 3}</Badge>
-                        )}
+                        {note.tags.length > 3 && <Badge>+{note.tags.length - 3}</Badge>}
                       </div>
                     )}
                   </div>
-                  <span className="shrink-0 text-xs text-gray-400">
+                  <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
                     {new Date(note.updatedAt).toLocaleDateString()}
                   </span>
                 </div>

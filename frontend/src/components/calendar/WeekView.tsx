@@ -30,9 +30,7 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
     }
   }, [currentDate]);
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  useEffect(() => { loadEvents(); }, [loadEvents]);
 
   const getWeekDays = () => {
     const startOfWeek = new Date(currentDate);
@@ -76,15 +74,15 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
   const hourHeight = 60;
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigateWeek(-1)}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </Button>
-          <h2 className="min-w-[200px] text-center text-sm font-semibold text-gray-900">
+          <h2 className="min-w-[200px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
             {days[0].toLocaleDateString('default', { month: 'short', day: 'numeric' })} —{' '}
             {days[6].toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}
           </h2>
@@ -94,15 +92,13 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
             </svg>
           </Button>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
-          Today
-        </Button>
+        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
       </div>
 
       <div className="relative flex flex-1 overflow-auto">
-        <div className="sticky left-0 z-10 w-16 shrink-0 bg-white border-r border-gray-200">
+        <div className="sticky left-0 z-10 w-16 shrink-0 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950">
           {hours.map((hour) => (
-            <div key={hour} className="border-b border-gray-100 px-2 pt-0 text-[11px] text-gray-400" style={{ height: hourHeight }}>
+            <div key={hour} className="border-b border-gray-100 px-2 pt-0 text-[11px] text-gray-400 dark:border-gray-800 dark:text-gray-500" style={{ height: hourHeight }}>
               {hour === 0 ? '12AM' : hour < 12 ? `${hour}AM` : hour === 12 ? '12PM' : `${hour - 12}PM`}
             </div>
           ))}
@@ -110,18 +106,16 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
 
         <div className="flex flex-1">
           {days.map((day, dayIndex) => (
-            <div key={dayIndex} className="flex-1 border-r border-gray-100">
-              <div
-                className={`sticky top-0 z-10 border-b border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium ${
-                  isToday(day) ? 'text-primary-600' : 'text-gray-500'
-                }`}
-              >
+            <div key={dayIndex} className="flex-1 border-r border-gray-100 dark:border-gray-800">
+              <div className={`sticky top-0 z-10 border-b border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium dark:border-gray-700 dark:bg-gray-950 ${
+                isToday(day) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'
+              }`}>
                 {day.toLocaleDateString('default', { weekday: 'short' })}{' '}
-                <span className={isToday(day) ? '' : 'text-gray-700'}>{day.getDate()}</span>
+                <span className={isToday(day) ? '' : 'text-gray-700 dark:text-gray-300'}>{day.getDate()}</span>
               </div>
-              <div className={`relative min-h-[1440px] ${isToday(day) ? 'bg-primary-50/20' : ''}`}>
+              <div className={`relative min-h-[1440px] ${isToday(day) ? 'bg-primary-50/20 dark:bg-primary-900/10' : ''}`}>
                 {hours.map((hour) => (
-                  <div key={hour} className="border-b border-gray-100" style={{ height: hourHeight }} />
+                  <div key={hour} className="border-b border-gray-100 dark:border-gray-800" style={{ height: hourHeight }} />
                 ))}
                 {getEventsForDate(day).map((event) => {
                   const startTime = new Date(event.startTime);
@@ -134,11 +128,8 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
                     <div
                       key={event.id}
                       onClick={() => onSelectEvent(event)}
-                      className="absolute left-0.5 right-0.5 cursor-pointer overflow-hidden rounded-lg bg-primary-500 px-1.5 py-1 text-xs text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow"
-                      style={{
-                        top: `${startHour * hourHeight}px`,
-                        height: `${Math.max(duration * hourHeight, 20)}px`,
-                      }}
+                      className="absolute left-0.5 right-0.5 z-10 cursor-pointer overflow-hidden rounded-lg bg-primary-500 px-1.5 py-1 text-xs text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow dark:bg-primary-600 dark:hover:bg-primary-500"
+                      style={{ top: `${startHour * hourHeight}px`, height: `${Math.max(duration * hourHeight, 20)}px` }}
                     >
                       <div className="truncate font-medium">{event.title}</div>
                       {duration > 0.5 && (
@@ -155,8 +146,8 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
         </div>
 
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-950/60">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-primary-900 dark:border-t-primary-400" />
           </div>
         )}
       </div>

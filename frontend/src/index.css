@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --color-primary-50: #eff6ff;
@@ -18,7 +20,6 @@ html, body, #root {
   @apply h-full font-sans antialiased;
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
@@ -32,20 +33,22 @@ html {
   @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-gray-300;
+  @apply rounded-full bg-gray-300 dark:bg-gray-600;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  @apply bg-gray-400 dark:bg-gray-500;
 }
 
-/* Focus ring utility */
 *:focus-visible {
   @apply outline-2 outline-offset-2 outline-primary-500;
 }
 
-/* Transitions */
-.transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
 }
 
 /* Markdown prose styles */
@@ -66,3 +69,16 @@ html {
 .prose th { @apply bg-gray-50 font-medium; }
 .prose hr { @apply border-gray-200 my-6; }
 .prose img { @apply max-w-full rounded-lg; }
+
+/* Dark mode prose overrides */
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3 { @apply text-white; }
+.dark .prose p,
+.dark .prose li { @apply text-gray-300; }
+.dark .prose code { @apply bg-gray-800 text-gray-200; }
+.dark .prose blockquote { @apply text-gray-400; }
+.dark .prose th,
+.dark .prose td { @apply border-gray-700; }
+.dark .prose th { @apply bg-gray-800 text-gray-300; }
+.dark .prose hr { @apply border-gray-700; }

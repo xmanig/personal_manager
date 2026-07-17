@@ -24,16 +24,16 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm dark:bg-black/60"
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
-      <div className={`${maxWidth} w-full animate-in fade-in zoom-in-95 duration-200 rounded-2xl bg-white p-6 shadow-2xl`}>
+      <div className={`${maxWidth} w-full animate-in fade-in zoom-in-95 duration-200 rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-800 dark:ring-1 dark:ring-gray-700`}>
         {title && (
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

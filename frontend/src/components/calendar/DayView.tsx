@@ -28,9 +28,7 @@ export function DayView({ onSelectEvent }: DayViewProps) {
     }
   }, [currentDate]);
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  useEffect(() => { loadEvents(); }, [loadEvents]);
 
   const isTodayView = () => {
     const today = new Date();
@@ -59,21 +57,16 @@ export function DayView({ onSelectEvent }: DayViewProps) {
   const currentTimePosition = getCurrentTimePosition();
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigateDay(-1)}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </Button>
-          <h2 className="min-w-[200px] text-center text-sm font-semibold text-gray-900">
-            {currentDate.toLocaleDateString('default', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+          <h2 className="min-w-[200px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {currentDate.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </h2>
           <Button variant="ghost" size="sm" onClick={() => navigateDay(1)}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -81,31 +74,26 @@ export function DayView({ onSelectEvent }: DayViewProps) {
             </svg>
           </Button>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
-          Today
-        </Button>
+        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
       </div>
 
       <div className="relative flex flex-1 overflow-auto">
-        <div className="sticky left-0 z-10 w-16 shrink-0 border-r border-gray-200 bg-white">
+        <div className="sticky left-0 z-10 w-16 shrink-0 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950">
           {hours.map((hour) => (
-            <div key={hour} className="border-b border-gray-100 px-2 pt-0 text-[11px] text-gray-400" style={{ height: hourHeight }}>
+            <div key={hour} className="border-b border-gray-100 px-2 pt-0 text-[11px] text-gray-400 dark:border-gray-800 dark:text-gray-500" style={{ height: hourHeight }}>
               {hour === 0 ? '12AM' : hour < 12 ? `${hour}AM` : hour === 12 ? '12PM' : `${hour - 12}PM`}
             </div>
           ))}
         </div>
 
         <div className="relative flex-1">
-          <div className={`min-h-[1440px] ${isTodayView() ? 'bg-primary-50/20' : ''}`}>
+          <div className={`min-h-[1440px] ${isTodayView() ? 'bg-primary-50/20 dark:bg-primary-900/10' : ''}`}>
             {hours.map((hour) => (
-              <div key={hour} className="border-b border-gray-100" style={{ height: hourHeight }} />
+              <div key={hour} className="border-b border-gray-100 dark:border-gray-800" style={{ height: hourHeight }} />
             ))}
 
             {currentTimePosition !== null && (
-              <div
-                className="pointer-events-none absolute left-0 right-0 z-20"
-                style={{ top: `${currentTimePosition}px` }}
-              >
+              <div className="pointer-events-none absolute left-0 right-0 z-20" style={{ top: `${currentTimePosition}px` }}>
                 <div className="flex items-center">
                   <div className="h-2.5 w-2.5 rounded-full bg-red-500 shadow" />
                   <div className="flex-1 border-t-2 border-red-500" />
@@ -124,11 +112,8 @@ export function DayView({ onSelectEvent }: DayViewProps) {
                 <div
                   key={event.id}
                   onClick={() => onSelectEvent(event)}
-                  className="absolute left-1.5 right-1.5 z-10 cursor-pointer overflow-hidden rounded-xl bg-primary-500 px-3 py-2 text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow"
-                  style={{
-                    top: `${startHour * hourHeight}px`,
-                    height: `${Math.max(duration * hourHeight, 30)}px`,
-                  }}
+                  className="absolute left-1.5 right-1.5 z-10 cursor-pointer overflow-hidden rounded-xl bg-primary-500 px-3 py-2 text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow dark:bg-primary-600 dark:hover:bg-primary-500"
+                  style={{ top: `${startHour * hourHeight}px`, height: `${Math.max(duration * hourHeight, 30)}px` }}
                 >
                   <div className="truncate font-medium">{event.title}</div>
                   <div className="text-xs text-primary-100 opacity-90">
@@ -146,8 +131,8 @@ export function DayView({ onSelectEvent }: DayViewProps) {
         </div>
 
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-950/60">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-primary-900 dark:border-t-primary-400" />
           </div>
         )}
       </div>

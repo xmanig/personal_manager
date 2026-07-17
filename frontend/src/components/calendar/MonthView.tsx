@@ -38,7 +38,6 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDay = firstDay.getDay();
-
     const days: (Date | null)[] = [];
     for (let i = 0; i < startingDay; i++) days.push(null);
     for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
@@ -68,36 +67,30 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigateMonth(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </Button>
-          <h2 className="min-w-[180px] text-center text-sm font-semibold text-gray-900">
+          <h2 className="min-w-[180px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
             {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
           </h2>
-          <Button variant="ghost" size="sm" onClick={() => navigateMonth(1)}>
+          <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </Button>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setCurrentDate(new Date())}
-        >
-          Today
-        </Button>
+        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
       </div>
 
       <div className="relative flex-1">
         <div className="grid h-full grid-cols-7 auto-rows-fr">
           {weekDays.map((day) => (
-            <div key={day} className="border-b border-r border-gray-200 px-2 py-1.5 text-center text-xs font-medium text-gray-500">
+            <div key={day} className="border-b border-r border-gray-200 px-2 py-1.5 text-center text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
               {day}
             </div>
           ))}
@@ -106,9 +99,9 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
             <div
               key={index}
               onClick={() => date && onSelectDate(date)}
-              className={`min-h-[90px] border-b border-r border-gray-100 p-1.5 transition-colors ${
-                date ? 'cursor-pointer hover:bg-gray-50' : 'bg-gray-50/50'
-              } ${isToday(date || new Date()) ? 'bg-primary-50/50' : ''}`}
+              className={`min-h-[90px] border-b border-r border-gray-100 p-1.5 transition-colors dark:border-gray-800 ${
+                date ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-900/50'
+              } ${date && isToday(date) ? 'bg-primary-50/50 dark:bg-primary-900/20' : ''}`}
             >
               {date && (
                 <>
@@ -116,7 +109,7 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
                     className={`mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
                       isToday(date)
                         ? 'bg-primary-600 font-semibold text-white'
-                        : 'text-gray-700'
+                        : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {date.getDate()}
@@ -125,17 +118,14 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
                     {getEventsForDate(date).slice(0, 3).map((event) => (
                       <div
                         key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectEvent(event);
-                        }}
-                        className="cursor-pointer truncate rounded-md bg-primary-100 px-1.5 py-0.5 text-[11px] font-medium text-primary-700 transition-colors hover:bg-primary-200"
+                        onClick={(e) => { e.stopPropagation(); onSelectEvent(event); }}
+                        className="cursor-pointer truncate rounded-md bg-primary-100 px-1.5 py-0.5 text-[11px] font-medium text-primary-700 transition-colors hover:bg-primary-200 dark:bg-primary-900/50 dark:text-primary-300 dark:hover:bg-primary-800/50"
                       >
                         {event.title}
                       </div>
                     ))}
                     {getEventsForDate(date).length > 3 && (
-                      <div className="px-1 text-[11px] text-gray-400">
+                      <div className="px-1 text-[11px] text-gray-400 dark:text-gray-500">
                         +{getEventsForDate(date).length - 3} more
                       </div>
                     )}
@@ -147,15 +137,11 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
         </div>
 
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-950/60">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-primary-900 dark:border-t-primary-400" />
           </div>
         )}
       </div>
     </div>
   );
-
-  function navigateMonth(direction: number) {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
-  }
 }
