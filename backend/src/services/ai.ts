@@ -20,7 +20,8 @@ export async function chatCompletion(messages: ChatMessage[]): Promise<string> {
       model: AI_MODEL,
       messages,
       temperature: 0.1,
-      max_tokens: 500,
+      max_tokens: 2000,
+      stream: false,
     }),
   });
 
