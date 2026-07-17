@@ -41,5 +41,8 @@ frontend/src-tauri/target/
 # Testing
 coverage/
 
+# Google credentials
+google-credentials.json
+
 # Misc
 *.local
