@@ -12,6 +12,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
       : new Date(from.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const calendar = (req as any).googleAuth;
+    const googleAccount = (req as any).googleAccount;
 
     const { google } = await import('googleapis');
     const calendarApi = google.calendar({ version: 'v3', auth: calendar });
@@ -47,6 +48,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
           isAllDay: !!event.start?.date,
           lastGoogleEdit: event.updated ? new Date(event.updated) : null,
           syncedAt: new Date(),
+          googleAccountId: googleAccount?.id || undefined,
         },
         create: {
           googleEventId: event.id,
@@ -58,6 +60,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
           recurrenceRule: event.recurrence?.join('\n') || null,
           isAllDay: !!event.start?.date,
           lastGoogleEdit: event.updated ? new Date(event.updated) : null,
+          googleAccountId: googleAccount?.id || null,
         },
       });
     }
@@ -66,6 +69,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
       where: {
         startTime: { gte: from },
         endTime: { lte: to },
+        ...(req.query.accountId ? { googleAccountId: String(req.query.accountId) } : {}),
       },
       orderBy: { startTime: 'asc' },
     });
@@ -88,6 +92,7 @@ router.get('/calendar/events/local', async (req: Request, res: Response) => {
       where: {
         startTime: { gte: from },
         endTime: { lte: to },
+        ...(req.query.accountId ? { googleAccountId: String(req.query.accountId) } : {}),
       },
       orderBy: { startTime: 'asc' },
     });
@@ -101,7 +106,7 @@ router.get('/calendar/events/local', async (req: Request, res: Response) => {
 
 router.post('/calendar/events', requireGoogleAuth, async (req: Request, res: Response) => {
   try {
-    const { title, description, startTime, endTime, location, isAllDay } = req.body;
+    const { title, description, startTime, endTime, location, isAllDay, googleAccountId } = req.body;
 
     if (!title || !startTime || !endTime) {
       res.status(400).json({ error: 'Title, startTime, and endTime are required' });
@@ -109,6 +114,7 @@ router.post('/calendar/events', requireGoogleAuth, async (req: Request, res: Res
     }
 
     const calendar = (req as any).googleAuth;
+    const googleAccount = (req as any).googleAccount;
     const { google } = await import('googleapis');
     const calendarApi = google.calendar({ version: 'v3', auth: calendar });
 
@@ -133,6 +139,8 @@ router.post('/calendar/events', requireGoogleAuth, async (req: Request, res: Res
 
     const googleEvent = response.data;
 
+    const effectiveAccountId = googleAccountId || googleAccount?.id || null;
+
     const localEvent = await prisma.calendarEvent.create({
       data: {
         googleEventId: googleEvent.id!,
@@ -143,6 +151,7 @@ router.post('/calendar/events', requireGoogleAuth, async (req: Request, res: Res
         location: location || null,
         isAllDay: isAllDay || false,
         lastLocalEdit: new Date(),
+        googleAccountId: effectiveAccountId,
       },
     });
 
