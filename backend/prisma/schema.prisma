@@ -38,6 +38,25 @@ model Tag {
   notes Note[]
 }
 
+// === Google Accounts ===
+
+model GoogleAccount {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  label        String?
+  accessToken  String
+  refreshToken String
+  tokenExpiry  DateTime
+  scopes       String[]
+  filterRules  Json?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bills          Bill[]
+  calendarEvents CalendarEvent[]
+}
+
 // === Bills ===
 
 model Bill {
@@ -63,12 +82,15 @@ model Bill {
   isPaid          Boolean  @default(false)
   isRecurring     Boolean  @default(false)
   recurringFreq   String?
+  googleAccountId String?
+  googleAccount   GoogleAccount? @relation(fields: [googleAccountId], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([dueDate])
   @@index([category])
   @@index([source])
+  @@index([googleAccountId])
 }
 
 // === Calendar ===
@@ -86,11 +108,14 @@ model CalendarEvent {
   lastLocalEdit   DateTime?
   lastGoogleEdit  DateTime?
   syncedAt        DateTime @default(now())
+  googleAccountId String?
+  googleAccount   GoogleAccount? @relation(fields: [googleAccountId], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([startTime])
   @@index([endTime])
+  @@index([googleAccountId])
 }
 
 // === Settings ===
