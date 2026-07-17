@@ -6,6 +6,7 @@ import { BillsPage } from './pages/BillsPage';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import { Note } from './types';
 import { useState, useEffect } from 'react';
+import { getAuthStatus, startGoogleAuth, disconnectGoogle, AuthStatus } from './lib/auth';
 
 function NotesPage() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -70,6 +71,28 @@ const navItems = [
 
 function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () => void }) {
   const location = useLocation();
+  const [auth, setAuth] = useState<AuthStatus>({ connected: false });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getAuthStatus().then(setAuth);
+  }, []);
+
+  const handleConnect = () => {
+    startGoogleAuth();
+  };
+
+  const handleDisconnect = async () => {
+    setLoading(true);
+    try {
+      await disconnectGoogle();
+      setAuth({ connected: false });
+    } catch {
+      console.error('Failed to disconnect');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <nav className="flex h-full w-60 flex-col border-r border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-900/50">
@@ -118,15 +141,41 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
       </div>
 
       <div className="border-t border-gray-200 px-5 py-4 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-            U
+        {auth.connected ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-sm font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
+                </svg>
+              </div>
+              <div className="flex-1 truncate">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">Google</div>
+                <div className="truncate text-xs text-gray-500 dark:text-gray-400">{auth.email}</div>
+              </div>
+            </div>
+            <button
+              onClick={handleDisconnect}
+              disabled={loading}
+              className="w-full rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+            >
+              {loading ? 'Disconnecting...' : 'Disconnect'}
+            </button>
           </div>
-          <div className="flex-1 truncate">
-            <div className="text-sm font-medium text-gray-900 dark:text-gray-200">User</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Local account</div>
-          </div>
-        </div>
+        ) : (
+          <button
+            onClick={handleConnect}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Connect Google
+          </button>
+        )}
       </div>
     </nav>
   );
