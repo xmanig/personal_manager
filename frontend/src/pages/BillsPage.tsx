@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bill, BILL_CATEGORIES, BILL_STATUSES } from '../types/bills';
-import { fetchBills, updateBill, deleteBill, fetchBillsFromGmail } from '../lib/bills-api';
+import { fetchBills, updateBill, deleteBill, fetchBillsFromGmail, fetchBillsFromAllAccounts } from '../lib/bills-api';
+import { listAccounts, GoogleAccount } from '../lib/auth';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -14,8 +15,13 @@ export function BillsPage() {
   const [fetching, setFetching] = useState(false);
   const [filter, setFilter] = useState<{ category?: string; status?: string }>({});
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [accounts, setAccounts] = useState<GoogleAccount[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
-  useEffect(() => { loadBills(); }, []);
+  useEffect(() => {
+    loadBills();
+    listAccounts().then(setAccounts);
+  }, []);
 
   const loadBills = async () => {
     try {
@@ -28,10 +34,23 @@ export function BillsPage() {
     }
   };
 
+  const getAccountEmail = (id: string | null) => {
+    if (!id) return '';
+    const acc = accounts.find((a) => a.id === id);
+    return acc ? (acc.label || acc.email) : '';
+  };
+
   const handleFetchFromGmail = async () => {
     setFetching(true);
     try {
-      await fetchBillsFromGmail({ hasAttachment: true });
+      if (selectedAccountId === '__all__') {
+        await fetchBillsFromAllAccounts({ hasAttachment: true });
+      } else {
+        await fetchBillsFromGmail(
+          { hasAttachment: true },
+          selectedAccountId || undefined
+        );
+      }
       await loadBills();
     } catch (err) {
       console.error('Failed to fetch from Gmail:', err);
@@ -90,12 +109,29 @@ export function BillsPage() {
     <div className="flex h-full flex-col bg-white dark:bg-gray-950">
       <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Bills</h1>
-        <Button size="sm" onClick={handleFetchFromGmail} loading={fetching}>
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          {fetching ? 'Fetching...' : 'Fetch from Gmail'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {accounts.length > 1 && (
+            <select
+              value={selectedAccountId}
+              onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50"
+            >
+              <option value="">Default account</option>
+              <option value="__all__">All Accounts</option>
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.label || acc.email}
+                </option>
+              ))}
+            </select>
+          )}
+          <Button size="sm" onClick={handleFetchFromGmail} loading={fetching}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            {fetching ? 'Fetching...' : 'Fetch from Gmail'}
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
@@ -135,13 +171,14 @@ export function BillsPage() {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             <div className="flex items-center gap-4 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-              <div className="w-[14%]">Vendor</div>
-              <div className="w-[14%]">Invoice #</div>
-              <div className="w-[12%] text-right">Amount</div>
-              <div className="w-[12%]">Due Date</div>
-              <div className="w-[12%]">Received</div>
+              <div className="w-[12%]">Vendor</div>
+              <div className="w-[12%]">Invoice #</div>
+              <div className="w-[10%] text-right">Amount</div>
+              <div className="w-[10%]">Due Date</div>
+              <div className="w-[10%]">Received</div>
               <div className="w-[10%]">Category</div>
               <div className="w-[10%]">Status</div>
+              <div className="w-[10%]">Account</div>
               <div className="flex-1 text-right">Actions</div>
             </div>
             {(() => {
@@ -183,6 +220,7 @@ export function BillsPage() {
                       onEdit={setEditingBill}
                       onDelete={handleDelete}
                       statusBadge={statusBadge}
+                      accountLabel={getAccountEmail(bill.googleAccountId)}
                       API_BASE={API_BASE}
                     />
                   ))}
@@ -205,7 +243,7 @@ export function BillsPage() {
 }
 
 function BillRow({
-  bill, onMarkPaid, onRevokePaid, onEdit, onDelete, statusBadge, API_BASE
+  bill, onMarkPaid, onRevokePaid, onEdit, onDelete, statusBadge, accountLabel, API_BASE
 }: {
   bill: Bill;
   onMarkPaid: (bill: Bill) => void;
@@ -213,15 +251,16 @@ function BillRow({
   onEdit: (bill: Bill) => void;
   onDelete: (id: string) => void;
   statusBadge: (s: string) => 'success' | 'warning' | 'danger' | 'default';
+  accountLabel: string;
   API_BASE: string;
 }) {
   return (
     <div className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
-      <div className="w-[14%] truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
-      <div className="w-[14%] truncate text-sm text-gray-500 dark:text-gray-400">
+      <div className="w-[12%] truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
+      <div className="w-[12%] truncate text-sm text-gray-500 dark:text-gray-400">
         {bill.invoiceNumber || '-'}
       </div>
-      <div className="w-[12%] text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">
+      <div className="w-[10%] text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">
         <div>{bill.amount.toFixed(2)} {bill.currency}</div>
         {bill.localAmount != null && bill.localCurrency && (
           <div className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -229,14 +268,15 @@ function BillRow({
           </div>
         )}
       </div>
-      <div className="w-[12%] text-sm text-gray-500 dark:text-gray-400">
+      <div className="w-[10%] text-sm text-gray-500 dark:text-gray-400">
         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
       </div>
-      <div className="w-[12%] text-sm text-gray-500 dark:text-gray-400">
+      <div className="w-[10%] text-sm text-gray-500 dark:text-gray-400">
         {new Date(bill.createdAt).toLocaleDateString()}
       </div>
       <div className="w-[10%]"><Badge>{bill.category}</Badge></div>
       <div className="w-[10%]"><Badge variant={statusBadge(bill.status)}>{bill.status}</Badge></div>
+      <div className="w-[10%] truncate text-xs text-gray-400 dark:text-gray-500">{accountLabel}</div>
       <div className="flex flex-1 justify-end gap-1">
         {bill.pdfUrl && (
           <a href={`${API_BASE}/api/bills/${bill.id}/pdf`} target="_blank" rel="noopener noreferrer"

@@ -15,6 +15,7 @@ export interface Bill {
   pdfUrl: string | null;
   lineItems: { description: string; amount: number }[];
   gmailMessageId: string | null;
+  googleAccountId: string | null;
   createdAt: string;
   updatedAt: string;
 }
