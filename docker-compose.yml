@@ -25,6 +25,9 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/personal_manager
       PORT: 3001
       NODE_ENV: production
+      AI_BASE_URL: ${AI_BASE_URL:-http://host.docker.internal:1234/v1}
+      AI_MODEL: ${AI_MODEL:-google/gemma-4-e4b}
+      AI_API_KEY: ${AI_API_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

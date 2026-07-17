@@ -1,6 +1,6 @@
 const AI_API_KEY = process.env.AI_API_KEY || '';
 const AI_BASE_URL = process.env.AI_BASE_URL || process.env.AI_API_BASE_URL || 'http://host.docker.internal:1234/v1';
-const AI_MODEL = process.env.AI_MODEL || 'lm-studio';
+const AI_MODEL = process.env.AI_MODEL || 'google/gemma-4-e4b';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
