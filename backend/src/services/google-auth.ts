@@ -1,5 +1,7 @@
 import { google } from 'googleapis';
 import { prisma } from '../lib/prisma';
+import fs from 'fs';
+import path from 'path';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
@@ -8,11 +10,43 @@ const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
 ];
 
+function loadGoogleConfig(): { clientId: string; clientSecret: string; redirectUri: string } {
+  const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH || path.join(__dirname, '../../google-credentials.json');
+
+  if (fs.existsSync(credentialsPath)) {
+    const raw = fs.readFileSync(credentialsPath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    const web = parsed.web || parsed.installed;
+    if (!web) throw new Error('Could not find "web" or "installed" key in credentials JSON');
+    return {
+      clientId: web.client_id,
+      clientSecret: web.client_secret,
+      redirectUri: web.redirect_uris?.[0] || 'http://localhost:3001/api/auth/callback',
+    };
+  }
+
+  return {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/callback',
+  };
+}
+
+const config = loadGoogleConfig();
+
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
+  config.clientId,
+  config.clientSecret,
+  config.redirectUri
 );
+
+export function createOAuth2Client() {
+  return new google.auth.OAuth2(
+    config.clientId,
+    config.clientSecret,
+    config.redirectUri
+  );
+}
 
 export function getAuthUrl(): string {
   return oauth2Client.generateAuthUrl({

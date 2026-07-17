@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getStoredTokens, saveTokens } from '../services/google-auth';
-import { google } from 'googleapis';
+import { getStoredTokens, saveTokens, createOAuth2Client } from '../services/google-auth';
 
 export async function requireGoogleAuth(req: Request, res: Response, next: NextFunction) {
   try {
@@ -11,12 +10,7 @@ export async function requireGoogleAuth(req: Request, res: Response, next: NextF
       return;
     }
 
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    );
-
+    const oauth2Client = createOAuth2Client();
     oauth2Client.setCredentials(tokens);
 
     if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
