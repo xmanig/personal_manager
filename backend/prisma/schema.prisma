@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === Notes ===
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?  @db.Text
+  folderId  String?
+  folder    Folder?  @relation(fields: [folderId], references: [id])
+  tags      Tag[]
+  summary   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([folderId])
+}
+
+model Folder {
+  id       String  @id @default(cuid())
+  name     String
+  parentId String?
+  parent   Folder? @relation("FolderTree", fields: [parentId], references: [id])
+  children Folder[] @relation("FolderTree")
+  notes    Note[]
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  notes Note[]
+}
+
+// === Bills ===
+
+model Bill {
+  id              String   @id @default(cuid())
+  vendor          String?
+  amount          Float?
+  currency        String?  @default("EUR")
+  dueDate         DateTime?
+  category        String?
+  source          String?
+  gmailMessageId  String?  @unique
+  driveFileId     String?  @unique
+  pdfUrl          String?
+  rawText         String?  @db.Text
+  lineItems       Json?
+  confidenceScore Float?
+  isPaid          Boolean  @default(false)
+  isRecurring     Boolean  @default(false)
+  recurringFreq   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([dueDate])
+  @@index([category])
+  @@index([source])
+}
+
+// === Calendar ===
+
+model CalendarEvent {
+  id              String   @id @default(cuid())
+  googleEventId   String   @unique
+  title           String
+  description     String?  @db.Text
+  startTime       DateTime
+  endTime         DateTime
+  location        String?
+  recurrenceRule  String?
+  isAllDay        Boolean  @default(false)
+  lastLocalEdit   DateTime?
+  lastGoogleEdit  DateTime?
+  syncedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([startTime])
+  @@index([endTime])
+}
+
+// === Settings ===
+
+model UserSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @db.Text
+}
