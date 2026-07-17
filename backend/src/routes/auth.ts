@@ -120,4 +120,58 @@ router.put('/auth/accounts/:id/label', requireGoogleAuth, async (req: Request, r
   }
 });
 
+router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const accountId = String(req.params.id);
+    const { prisma } = await import('../lib/prisma');
+    const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+    const url = getAuthUrl(account.label || account.email);
+    res.json({ url, accountId });
+  } catch (error) {
+    console.error('Failed to generate reconnect URL:', error);
+    res.status(500).json({ error: 'Failed to generate reconnect URL' });
+  }
+});
+
+router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const accountId = String(req.params.id);
+    const { prisma } = await import('../lib/prisma');
+    const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+
+    const needsReconnect = account.tokenExpiry.getTime() < Date.now();
+
+    let email = account.email;
+    if (!needsReconnect) {
+      try {
+        const client = (await import('../services/google-auth')).createOAuth2Client();
+        const { decrypt } = await import('../lib/encryption');
+        client.setCredentials({
+          access_token: decrypt(account.accessToken),
+          refresh_token: decrypt(account.refreshToken),
+        });
+        const oauth2 = (await import('googleapis')).google.oauth2({ version: 'v2', auth: client });
+        const { data } = await oauth2.userinfo.get();
+        if (data.email) email = data.email;
+      } catch {
+        res.json({ id: accountId, email: account.email, needsReconnect: true });
+        return;
+      }
+    }
+
+    res.json({ id: accountId, email, label: account.label, isDefault: account.isDefault, needsReconnect });
+  } catch (error) {
+    console.error('Failed to check account status:', error);
+    res.status(500).json({ error: 'Failed to check account status' });
+  }
+});
+
 export default router;

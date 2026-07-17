@@ -58,3 +58,23 @@ export async function updateAccountLabel(id: string, label: string): Promise<voi
     body: JSON.stringify({ label }),
   });
 }
+
+export async function getAccountStatus(id: string): Promise<{
+  id: string;
+  email: string;
+  label: string | null;
+  isDefault: boolean;
+  needsReconnect: boolean;
+}> {
+  const res = await fetch(`${API_BASE}/api/auth/accounts/${id}/status`);
+  if (!res.ok) throw new Error('Failed to get account status');
+  return res.json();
+}
+
+export async function reconnectAccount(id: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/auth/accounts/${id}/reconnect`, { method: 'POST' });
+  if (!res.ok) throw new Error('Failed to get reconnect URL');
+  const data = await res.json();
+  window.location.href = data.url;
+  return data.url;
+}

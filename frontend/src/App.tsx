@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import {
   getAuthStatus, startGoogleAuth, disconnectGoogle,
   listAccounts, deleteAccount, setDefaultAccount, updateAccountLabel,
+  getAccountStatus, reconnectAccount,
   AuthStatus, GoogleAccount,
 } from './lib/auth';
 
@@ -81,6 +82,7 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
   const [loading, setLoading] = useState(false);
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [accountStatuses, setAccountStatuses] = useState<Record<string, { needsReconnect: boolean }>>({});
 
   const refresh = async () => {
     const status = await getAuthStatus();
@@ -88,8 +90,19 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
     if (status.connected) {
       const accs = await listAccounts();
       setAccounts(accs);
+      const statuses: Record<string, { needsReconnect: boolean }> = {};
+      for (const acc of accs) {
+        try {
+          const s = await getAccountStatus(acc.id);
+          statuses[acc.id] = { needsReconnect: s.needsReconnect };
+        } catch {
+          statuses[acc.id] = { needsReconnect: true };
+        }
+      }
+      setAccountStatuses(statuses);
     } else {
       setAccounts([]);
+      setAccountStatuses({});
     }
   };
 
@@ -207,6 +220,7 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
                         ) : (
                           <>
                             <div className="flex items-center gap-1">
+                              <div className={`h-2 w-2 rounded-full ${accountStatuses[acc.id]?.needsReconnect ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                               <span className="font-medium text-gray-900 dark:text-gray-200">
                                 {acc.label || acc.email}
                               </span>
@@ -222,13 +236,21 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
                       </div>
                     </div>
                     {editingLabel !== acc.id && (
-                      <div className="mt-1 flex gap-2">
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
                         <button
                           onClick={() => { setEditingLabel(acc.id); setEditValue(acc.label || acc.email); }}
                           className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                         >
                           Rename
                         </button>
+                        {accountStatuses[acc.id]?.needsReconnect && (
+                          <button
+                            onClick={() => reconnectAccount(acc.id)}
+                            className="text-[10px] font-medium text-amber-500 hover:text-amber-600"
+                          >
+                            Reconnect
+                          </button>
+                        )}
                         {!acc.isDefault && (
                           <>
                             <button
