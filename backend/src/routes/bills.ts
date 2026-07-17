@@ -5,6 +5,11 @@ import { searchBillEmails, downloadAttachment } from '../services/gmail-bills';
 import { parsePdf } from '../services/pdf-parser';
 import { extractBillData } from '../services/bill-extractor';
 
+function sanitize(s: string | null | undefined): string | null {
+  if (s == null) return null;
+  return s.replace(/\x00/g, '');
+}
+
 const router = Router();
 
 router.get('/', async (req, res) => {
@@ -80,12 +85,12 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
 
     const bills = [];
     for (const email of emails) {
-      const existing = await prisma.bill.findFirst({
-        where: { gmailMessageId: email.messageId },
-      });
-      if (existing) continue;
-
       for (const attachment of email.attachments) {
+        const existing = await prisma.bill.findFirst({
+          where: { gmailMessageId: email.messageId },
+        });
+        if (existing) continue;
+
         const buffer = await downloadAttachment(
           email.messageId,
           attachment.attachmentId,
@@ -96,22 +101,26 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
 
         let extraction = null;
         if (!pdfResult.isScanned && pdfResult.text) {
-          extraction = await extractBillData(pdfResult.text);
+          try {
+            extraction = await extractBillData(pdfResult.text);
+          } catch (err) {
+            console.warn('AI extraction skipped:', err instanceof Error ? err.message : err);
+          }
         }
 
         const bill = await prisma.bill.create({
           data: {
             gmailMessageId: email.messageId,
-            vendor: extraction?.vendor || 'Unknown',
+            vendor: sanitize(extraction?.vendor || 'Unknown'),
             amount: extraction?.amount || 0,
             currency: extraction?.currency || 'USD',
             dueDate: extraction?.dueDate ? new Date(extraction.dueDate) : null,
-            category: extraction?.category || 'other',
+            category: sanitize(extraction?.category || 'other'),
             status: 'pending',
-            rawText: pdfResult.text,
-            pdfPath: null,
+            rawText: sanitize(pdfResult.text),
+            pdfUrl: null,
             lineItems: extraction?.lineItems || [],
-            notes: `Fetched from Gmail: ${email.subject}`,
+            notes: sanitize(`Fetched from Gmail: ${email.subject}`),
           },
         });
         bills.push(bill);

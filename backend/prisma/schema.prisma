@@ -46,7 +46,10 @@ model Bill {
   amount          Float?
   currency        String?  @default("EUR")
   dueDate         DateTime?
+  paidDate        DateTime?
   category        String?
+  status          String?  @default("pending")
+  notes           String?  @db.Text
   source          String?
   gmailMessageId  String?  @unique
   driveFileId     String?  @unique
