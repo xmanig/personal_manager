@@ -121,14 +121,15 @@ export function BillsPage() {
             action={<Button size="sm" onClick={handleFetchFromGmail}>Fetch from Gmail</Button>} />
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            <div className="flex items-center gap-3 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-              <div className="w-1/5">Vendor</div>
-              <div className="w-1/6 text-right">Amount</div>
-              <div className="w-1/6">Due Date</div>
-              <div className="w-1/6">Received</div>
-              <div className="w-1/6">Category</div>
-              <div className="w-1/6">Status</div>
-              <div className="w-1/5 text-right">Actions</div>
+            <div className="flex items-center gap-4 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
+              <div className="w-[14%]">Vendor</div>
+              <div className="w-[14%]">Invoice #</div>
+              <div className="w-[12%] text-right">Amount</div>
+              <div className="w-[12%]">Due Date</div>
+              <div className="w-[12%]">Received</div>
+              <div className="w-[10%]">Category</div>
+              <div className="w-[10%]">Status</div>
+              <div className="flex-1 text-right">Actions</div>
             </div>
             {(() => {
               const groups: Record<string, Bill[]> = {};
@@ -186,18 +187,21 @@ function BillRow({
   API_BASE: string;
 }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
-      <div className="w-1/5 truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
-      <div className="w-1/6 text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">{bill.amount.toFixed(2)} {bill.currency}</div>
-      <div className="w-1/6 text-sm text-gray-500 dark:text-gray-400">
+    <div className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
+      <div className="w-[14%] truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
+      <div className="w-[14%] truncate text-sm text-gray-500 dark:text-gray-400">
+        {bill.invoiceNumber || '-'}
+      </div>
+      <div className="w-[12%] text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">{bill.amount.toFixed(2)} {bill.currency}</div>
+      <div className="w-[12%] text-sm text-gray-500 dark:text-gray-400">
         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
       </div>
-      <div className="w-1/6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="w-[12%] text-sm text-gray-500 dark:text-gray-400">
         {new Date(bill.createdAt).toLocaleDateString()}
       </div>
-      <div className="w-1/6"><Badge>{bill.category}</Badge></div>
-      <div className="w-1/6"><Badge variant={statusBadge(bill.status)}>{bill.status}</Badge></div>
-      <div className="flex w-1/5 justify-end gap-1">
+      <div className="w-[10%]"><Badge>{bill.category}</Badge></div>
+      <div className="w-[10%]"><Badge variant={statusBadge(bill.status)}>{bill.status}</Badge></div>
+      <div className="flex flex-1 justify-end gap-1">
         {bill.pdfUrl && (
           <a href={`${API_BASE}/api/bills/${bill.id}/pdf`} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">

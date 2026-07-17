@@ -50,6 +50,7 @@ model Bill {
   category        String?
   status          String?  @default("pending")
   notes           String?  @db.Text
+  invoiceNumber   String?
   source          String?
   gmailMessageId  String?  @unique
   driveFileId     String?  @unique

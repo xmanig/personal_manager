@@ -6,6 +6,7 @@ export interface BillExtraction {
   currency: string;
   dueDate: string | null;
   category: string;
+  invoiceNumber: string | null;
   lineItems: { description: string; amount: number }[];
   confidence: number;
 }
@@ -22,6 +23,7 @@ Return a JSON object with:
 - currency: Currency code like USD, EUR, etc. (string, default USD)
 - dueDate: Due date in YYYY-MM-DD format (string or null if not found)
 - category: One of: utilities, rent, insurance, subscription, telecom, medical, grocery, other (string)
+- invoiceNumber: Invoice or receipt number (string or null if not found)
 - lineItems: Array of { description: string, amount: number } (may be empty array)
 - confidence: How confident you are in the extraction 0-1 (number)
 
@@ -41,6 +43,7 @@ Return ONLY the JSON object, no other text.`;
       currency: parsed.currency || 'USD',
       dueDate: parsed.dueDate || null,
       category: parsed.category || 'other',
+      invoiceNumber: parsed.invoiceNumber || null,
       lineItems: Array.isArray(parsed.lineItems) ? parsed.lineItems : [],
       confidence: Math.min(1, Math.max(0, parseFloat(parsed.confidence) || 0.5)),
     };
@@ -51,6 +54,7 @@ Return ONLY the JSON object, no other text.`;
       currency: 'USD',
       dueDate: null,
       category: 'other',
+      invoiceNumber: null,
       lineItems: [],
       confidence: 0,
     };

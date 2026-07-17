@@ -8,6 +8,7 @@ export interface Bill {
   category: string;
   status: string;
   notes: string | null;
+  invoiceNumber: string | null;
   rawText: string | null;
   pdfUrl: string | null;
   lineItems: { description: string; amount: number }[];
@@ -22,6 +23,7 @@ export interface BillExtraction {
   currency: string;
   dueDate: string | null;
   category: string;
+  invoiceNumber: string | null;
   lineItems: { description: string; amount: number }[];
   confidence: number;
 }

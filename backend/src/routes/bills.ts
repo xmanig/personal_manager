@@ -52,7 +52,7 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { vendor, amount, currency, dueDate, paidDate, category, status, notes, lineItems } =
+    const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, lineItems } =
       req.body;
 
     const bill = await prisma.bill.update({
@@ -66,6 +66,7 @@ router.put('/:id', async (req, res) => {
         ...(category !== undefined && { category }),
         ...(status !== undefined && { status }),
         ...(notes !== undefined && { notes }),
+        ...(invoiceNumber !== undefined && { invoiceNumber }),
         ...(lineItems !== undefined && { lineItems }),
       },
     });
@@ -144,6 +145,7 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
             currency: extraction?.currency || 'USD',
             dueDate: extraction?.dueDate ? new Date(extraction.dueDate) : null,
             category: sanitize(extraction?.category || 'other'),
+            invoiceNumber: sanitize(extraction?.invoiceNumber),
             status: 'pending',
             rawText: sanitize(pdfResult.text),
             pdfUrl: pdfFilename,
