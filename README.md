@@ -1,10 +1,10 @@
 # Personal Manager
 
-A self-hosted desktop application for managing notes, calendars, and bills with Google integrations and AI-powered features.
+A self-hosted web application for managing notes, calendars, and bills with Google integrations and AI-powered features.
 
 ![License](https://img.shields.io/badge/license-ISC-blue)
-![Tauri](https://img.shields.io/badge/Tauri-2.x-blue)
-![React](https://img.shields.io/badge/React-18-blue)
+![React](https://img.shields.io/badge/React-19-blue)
+![Tailwind](https://img.shields.io/badge/Tailwind-4-blue)
 
 ## Features
 
@@ -29,12 +29,17 @@ A self-hosted desktop application for managing notes, calendars, and bills with 
 - Track bill status (pending, paid, overdue)
 - Filter by category and status
 
+### UI
+- Dark mode with persistent toggle
+- Responsive sidebar navigation
+- Modern design with Tailwind CSS v4
+
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Desktop | Tauri 2.x |
-| Frontend | React 18 + TypeScript |
+| Frontend | React 19 + TypeScript |
+| Styling | Tailwind CSS v4 |
 | Backend | Node.js + Express 5 |
 | Database | PostgreSQL 16 + Prisma 7 |
 | AI | OpenAI-compatible API |
@@ -43,45 +48,55 @@ A self-hosted desktop application for managing notes, calendars, and bills with 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Desktop App (Tauri)                    │
-├─────────────────────────────────────────────────────────┤
-│                    React Frontend                        │
-├─────────────────────────────────────────────────────────┤
-│                    Express Backend                       │
-├─────────────────────────────────────────────────────────┤
-│              PostgreSQL + Prisma ORM                     │
-└─────────────────────────────────────────────────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-    ┌─────▼─────┐   ┌─────▼─────┐   ┌─────▼─────┐
-    │  Google   │   │  Google   │   │    AI     │
-    │ Calendar  │   │   Drive   │   │   API     │
-    └───────────┘   └───────────┘   └───────────┘
+┌────────────────────────────────────────────────────────┐
+│                   Browser (SPA)                         │
+├────────────────────────────────────────────────────────┤
+│              React 19 + Tailwind CSS                    │
+└────────────────────────┬───────────────────────────────┘
+                         │  HTTP/REST
+┌────────────────────────▼───────────────────────────────┐
+│                  Express Backend                        │
+│                                                        │
+│  /api/auth      → Google OAuth                         │
+│  /api/notes     → CRUD + search + AI                   │
+│  /api/calendar  → Google Calendar sync                 │
+│  /api/bills     → Gmail + PDF + AI extraction          │
+├────────────────────────────────────────────────────────┤
+│              PostgreSQL + Prisma ORM                    │
+└────────┬───────────────────────────────┬───────────────┘
+         │                               │
+    ┌────▼────┐                   ┌──────▼──────┐
+    │Google   │                   │  AI API     │
+    │Calendar │                   │(OpenAI-     │
+    │Drive    │                   │ compatible) │
+    │Gmail    │                   └─────────────┘
+    └─────────┘
 ```
 
 ## Project Structure
 
 ```
 personal_manager/
-├── frontend/              # Tauri + React app
+├── frontend/              # React SPA
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components
+│   │   │   ├── ui/        # Button, Modal, Badge, etc.
+│   │   │   └── calendar/  # MonthView, WeekView, DayView
+│   │   ├── pages/         # Notes, Calendar, Bills pages
 │   │   ├── lib/           # API clients
-│   │   └── types/         # TypeScript types
-│   └── src-tauri/         # Tauri configuration
+│   │   └── types/         # TypeScript definitions
+│   └── index.html
 ├── backend/               # Node.js API
 │   ├── src/
 │   │   ├── routes/        # Express route handlers
 │   │   ├── services/      # Business logic
-│   │   ├── middleware/     # Express middleware
-│   │   └── lib/           # Utilities
-│   └── prisma/            # Database schema
-├── ARCHITECTURE.md        # Architecture decisions
-├── TICKETS.md             # Issue breakdown
-└── docker-compose.yml     # Docker services
+│   │   ├── middleware/     # Auth middleware
+│   │   └── lib/           # Utilities & API clients
+│   └── prisma/            # Database schema + migrations
+├── Dockerfile             # Multi-stage production build
+├── docker-compose.yml     # PostgreSQL + app containers
+├── ARCHITECTURE.md        # Design decisions & schema
+└── TICKETS.md             # Issue breakdown
 ```
 
 ## Getting Started
@@ -89,8 +104,7 @@ personal_manager/
 ### Prerequisites
 
 - Node.js 20+
-- Rust and Cargo (for Tauri)
-- PostgreSQL 16+
+- PostgreSQL 16+ (or Docker)
 - Google Cloud Project (for OAuth)
 
 ### Development
@@ -103,7 +117,6 @@ personal_manager/
 
 2. **Install dependencies**
    ```bash
-   npm install
    cd frontend && npm install
    cd ../backend && npm install
    ```
@@ -116,7 +129,7 @@ personal_manager/
 
 4. **Start the database**
    ```bash
-   docker compose up -d postgres
+   docker compose up -d db
    ```
 
 5. **Run migrations**
@@ -127,26 +140,20 @@ personal_manager/
 
 6. **Start development servers**
    ```bash
-   # Terminal 1 - Backend
-   cd backend
-   npm run dev
+   # Terminal 1 — Backend
+   cd backend && npm run dev
 
-   # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
+   # Terminal 2 — Frontend
+   cd frontend && npm run dev
    ```
 
-### Docker Deployment
+### Docker Deployment (Production)
 
 ```bash
 # Start all services
 docker compose up -d
 
-# View logs
-docker compose logs -f
-
-# Stop services
-docker compose down
+# Open http://localhost:3001
 ```
 
 ## Configuration
@@ -167,31 +174,39 @@ docker compose down
 ## API Endpoints
 
 ### Notes
-- `GET /api/notes` - List notes
-- `POST /api/notes` - Create note
-- `GET /api/notes/:id` - Get note
-- `PUT /api/notes/:id` - Update note
-- `DELETE /api/notes/:id` - Delete note
-- `GET /api/notes/search?q=` - Search notes
-- `POST /api/notes/:id/summarize` - AI summarize
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/notes` | List notes (with search/filter params) |
+| POST | `/api/notes` | Create note |
+| GET | `/api/notes/:id` | Get note |
+| PUT | `/api/notes/:id` | Update note |
+| DELETE | `/api/notes/:id` | Delete note |
+| GET | `/api/notes/search?q=` | Search notes |
+| POST | `/api/notes/:id/summarize` | AI summarize |
 
 ### Calendar
-- `GET /api/calendar/events` - List events (with Google sync)
-- `POST /api/calendar/events` - Create event
-- `PUT /api/calendar/events/:id` - Update event
-- `DELETE /api/calendar/events/:id` - Delete event
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/calendar/events` | List events (with Google sync) |
+| POST | `/api/calendar/events` | Create event (syncs to Google) |
+| PUT | `/api/calendar/events/:id` | Update event |
+| DELETE | `/api/calendar/events/:id` | Delete event |
 
 ### Bills
-- `GET /api/bills` - List bills
-- `POST /api/bills` - Create bill
-- `PUT /api/bills/:id` - Update bill
-- `DELETE /api/bills/:id` - Delete bill
-- `POST /api/bills/fetch-gmail` - Fetch from Gmail
-- `POST /api/bills/parse` - AI parse bill text
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/bills` | List bills |
+| GET | `/api/bills/:id` | Get bill |
+| PUT | `/api/bills/:id` | Update bill |
+| DELETE | `/api/bills/:id` | Delete bill |
+| POST | `/api/bills/fetch-gmail` | Fetch bills from Gmail |
+| POST | `/api/bills/parse` | AI parse bill text |
 
 ### Auth
-- `GET /api/auth/google` - Start Google OAuth
-- `GET /api/auth/callback` - OAuth callback
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/auth/google` | Start Google OAuth |
+| GET | `/api/auth/callback` | OAuth callback |
 
 ## License
 
