@@ -25,6 +25,10 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/personal_manager
       PORT: 3001
       NODE_ENV: production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - pdf_data:/app/backend/pdfs
     depends_on:
       db:
         condition: service_healthy
@@ -52,3 +56,4 @@ services:
 
 volumes:
   postgres_data:
+  pdf_data:

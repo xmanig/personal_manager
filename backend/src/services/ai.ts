@@ -1,6 +1,6 @@
-const AI_API_KEY = process.env.AI_API_KEY;
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL || 'https://api.openai.com/v1';
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4';
+const AI_API_KEY = process.env.AI_API_KEY || '';
+const AI_BASE_URL = process.env.AI_BASE_URL || process.env.AI_API_BASE_URL || 'http://host.docker.internal:1234/v1';
+const AI_MODEL = process.env.AI_MODEL || 'lm-studio';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -8,21 +8,19 @@ interface ChatMessage {
 }
 
 export async function chatCompletion(messages: ChatMessage[]): Promise<string> {
-  if (!AI_API_KEY) {
-    throw new Error('AI API key not configured');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (AI_API_KEY) {
+    headers['Authorization'] = `Bearer ${AI_API_KEY}`;
   }
 
-  const response = await fetch(`${AI_API_BASE_URL}/chat/completions`, {
+  const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${AI_API_KEY}`,
-    },
+    headers,
     body: JSON.stringify({
       model: AI_MODEL,
       messages,
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: 0.1,
+      max_tokens: 500,
     }),
   });
 

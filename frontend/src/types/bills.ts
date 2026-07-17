@@ -9,6 +9,7 @@ export interface Bill {
   status: string;
   notes: string | null;
   rawText: string | null;
+  pdfUrl: string | null;
   lineItems: { description: string; amount: number }[];
   gmailMessageId: string | null;
   createdAt: string;

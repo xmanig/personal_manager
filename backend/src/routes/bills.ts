@@ -4,6 +4,16 @@ import { prisma } from '../lib/prisma';
 import { searchBillEmails, downloadAttachment } from '../services/gmail-bills';
 import { parsePdf } from '../services/pdf-parser';
 import { extractBillData } from '../services/bill-extractor';
+import fs from 'fs';
+import path from 'path';
+
+const PDFS_DIR = path.join(__dirname, '../../pdfs');
+
+function ensurePdfDir() {
+  if (!fs.existsSync(PDFS_DIR)) {
+    fs.mkdirSync(PDFS_DIR, { recursive: true });
+  }
+}
 
 function sanitize(s: string | null | undefined): string | null {
   if (s == null) return null;
@@ -97,6 +107,11 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
           oauth2Client
         );
 
+        ensurePdfDir();
+        const pdfFilename = `${Date.now()}-${attachment.filename}`;
+        const pdfPath = path.join(PDFS_DIR, pdfFilename);
+        fs.writeFileSync(pdfPath, buffer);
+
         const pdfResult = await parsePdf(buffer);
 
         let extraction = null;
@@ -118,7 +133,7 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
             category: sanitize(extraction?.category || 'other'),
             status: 'pending',
             rawText: sanitize(pdfResult.text),
-            pdfUrl: null,
+            pdfUrl: pdfFilename,
             lineItems: extraction?.lineItems || [],
             notes: sanitize(`Fetched from Gmail: ${email.subject}`),
           },
@@ -147,6 +162,27 @@ router.post('/parse', requireGoogleAuth, async (req, res) => {
   } catch (err) {
     console.error('Failed to parse bill:', err);
     res.status(500).json({ error: 'Failed to parse bill' });
+  }
+});
+
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
+    if (!bill || !bill.pdfUrl) {
+      res.status(404).json({ error: 'PDF not found' });
+      return;
+    }
+
+    const pdfPath = path.join(PDFS_DIR, bill.pdfUrl);
+    if (!fs.existsSync(pdfPath)) {
+      res.status(404).json({ error: 'PDF file not found on disk' });
+      return;
+    }
+
+    res.download(pdfPath, bill.pdfUrl);
+  } catch (err) {
+    console.error('Failed to serve PDF:', err);
+    res.status(500).json({ error: 'Failed to serve PDF' });
   }
 });
 

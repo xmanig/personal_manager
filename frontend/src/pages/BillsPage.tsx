@@ -6,6 +6,8 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 
+const API_BASE = 'http://localhost:3001';
+
 export function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,23 +122,36 @@ export function BillsPage() {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             <div className="flex items-center gap-3 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-              <div className="w-1/4">Vendor</div>
+              <div className="w-1/5">Vendor</div>
               <div className="w-1/6 text-right">Amount</div>
               <div className="w-1/6">Due Date</div>
               <div className="w-1/6">Category</div>
               <div className="w-1/6">Status</div>
-              <div className="w-1/6 text-right">Actions</div>
+              <div className="w-1/5 text-right">Actions</div>
             </div>
             {filteredBills.map((bill) => (
               <div key={bill.id} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
-                <div className="w-1/4 truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
+                <div className="w-1/5 truncate text-sm font-medium text-gray-900 dark:text-gray-100">{bill.vendor}</div>
                 <div className="w-1/6 text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">{bill.amount.toFixed(2)} {bill.currency}</div>
                 <div className="w-1/6 text-sm text-gray-500 dark:text-gray-400">
                   {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
                 </div>
                 <div className="w-1/6"><Badge>{bill.category}</Badge></div>
                 <div className="w-1/6"><Badge variant={statusBadge(bill.status)}>{bill.status}</Badge></div>
-                <div className="flex w-1/6 justify-end gap-1">
+                <div className="flex w-1/5 justify-end gap-1">
+                  {bill.pdfUrl && (
+                    <a
+                      href={`${API_BASE}/api/bills/${bill.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    >
+                      <svg className="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                      PDF
+                    </a>
+                  )}
                   {bill.status !== 'paid' && (
                     <Button variant="ghost" size="sm" onClick={() => handleMarkPaid(bill)}>Mark Paid</Button>
                   )}
