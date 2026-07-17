@@ -221,7 +221,14 @@ function BillRow({
       <div className="w-[14%] truncate text-sm text-gray-500 dark:text-gray-400">
         {bill.invoiceNumber || '-'}
       </div>
-      <div className="w-[12%] text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">{bill.amount.toFixed(2)} {bill.currency}</div>
+      <div className="w-[12%] text-right text-sm tabular-nums text-gray-900 dark:text-gray-100">
+        <div>{bill.amount.toFixed(2)} {bill.currency}</div>
+        {bill.localAmount != null && bill.localCurrency && (
+          <div className="text-[10px] text-gray-400 dark:text-gray-500">
+            ≈ {bill.localAmount.toFixed(2)} {bill.localCurrency}
+          </div>
+        )}
+      </div>
       <div className="w-[12%] text-sm text-gray-500 dark:text-gray-400">
         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
       </div>

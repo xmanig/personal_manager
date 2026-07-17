@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { searchBillEmails, downloadAttachment } from '../services/gmail-bills';
 import { parsePdf } from '../services/pdf-parser';
 import { extractBillData } from '../services/bill-extractor';
+import { convertToLocal } from '../services/forex';
 import fs from 'fs';
 import path from 'path';
 
@@ -52,7 +53,7 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, lineItems } =
+    const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, localAmount, localCurrency, lineItems } =
       req.body;
 
     const bill = await prisma.bill.update({
@@ -67,6 +68,8 @@ router.put('/:id', async (req, res) => {
         ...(status !== undefined && { status }),
         ...(notes !== undefined && { notes }),
         ...(invoiceNumber !== undefined && { invoiceNumber }),
+        ...(localAmount !== undefined && { localAmount }),
+        ...(localCurrency !== undefined && { localCurrency }),
         ...(lineItems !== undefined && { lineItems }),
       },
     });
@@ -132,10 +135,20 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
         if (!pdfResult.isScanned && pdfResult.text) {
           try {
             extraction = await extractBillData(pdfResult.text);
+            if (!extraction || extraction.vendor === 'Unknown') {
+              console.warn('AI first attempt failed (vendor=Unknown), raw text hash:', pdfResult.text.length);
+              await new Promise(r => setTimeout(r, 2000));
+              extraction = await extractBillData(pdfResult.text);
+              if (!extraction || extraction.vendor === 'Unknown') {
+                console.warn('AI second attempt also failed');
+              }
+            }
           } catch (err) {
-            console.warn('AI extraction skipped:', err instanceof Error ? err.message : err);
+            console.warn('AI extraction error:', err instanceof Error ? err.message : err);
           }
         }
+
+        const conversion = await convertToLocal(extraction?.amount || 0, extraction?.currency || 'USD');
 
         const bill = await prisma.bill.create({
           data: {
@@ -143,6 +156,8 @@ router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
             vendor: sanitize(extraction?.vendor || 'Unknown'),
             amount: extraction?.amount || 0,
             currency: extraction?.currency || 'USD',
+            localAmount: conversion?.localAmount ?? null,
+            localCurrency: conversion?.localCurrency ?? null,
             dueDate: extraction?.dueDate ? new Date(extraction.dueDate) : null,
             category: sanitize(extraction?.category || 'other'),
             invoiceNumber: sanitize(extraction?.invoiceNumber),

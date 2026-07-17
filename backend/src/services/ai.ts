@@ -19,7 +19,7 @@ export async function chatCompletion(messages: ChatMessage[]): Promise<string> {
     body: JSON.stringify({
       model: AI_MODEL,
       messages,
-      temperature: 0.1,
+      temperature: 0.2,
       max_tokens: 2000,
       stream: false,
     }),

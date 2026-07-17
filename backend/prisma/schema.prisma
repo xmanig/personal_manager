@@ -45,6 +45,8 @@ model Bill {
   vendor          String?
   amount          Float?
   currency        String?  @default("EUR")
+  localAmount     Float?
+  localCurrency   String?
   dueDate         DateTime?
   paidDate        DateTime?
   category        String?

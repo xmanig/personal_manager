@@ -3,6 +3,8 @@ export interface Bill {
   vendor: string;
   amount: number;
   currency: string;
+  localAmount: number | null;
+  localCurrency: string | null;
   dueDate: string | null;
   paidDate: string | null;
   category: string;
