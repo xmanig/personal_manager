@@ -107,7 +107,7 @@ export async function loadAccount(accountId: string) {
   };
 }
 
-export async function refreshAccountTokens(accountId: string) {
+export async function refreshAccountTokens(accountId: string): Promise<{ access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null }> {
   const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
   if (!account) throw new Error('Account not found');
 
