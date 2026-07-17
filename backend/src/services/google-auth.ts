@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { prisma } from '../lib/prisma';
+import { encrypt, decrypt } from '../lib/encryption';
 import fs from 'fs';
 import path from 'path';
 
@@ -34,12 +35,6 @@ function loadGoogleConfig(): { clientId: string; clientSecret: string; redirectU
 
 const config = loadGoogleConfig();
 
-const oauth2Client = new google.auth.OAuth2(
-  config.clientId,
-  config.clientSecret,
-  config.redirectUri
-);
-
 export function createOAuth2Client() {
   return new google.auth.OAuth2(
     config.clientId,
@@ -48,81 +43,193 @@ export function createOAuth2Client() {
   );
 }
 
-export function getAuthUrl(): string {
-  return oauth2Client.generateAuthUrl({
+export function getAuthUrl(state?: string): string {
+  const client = createOAuth2Client();
+  return client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
     prompt: 'consent',
+    state,
   });
 }
 
-export async function getTokensFromCode(code: string): Promise<{ access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null; token_type?: string | null; scope?: string }> {
-  const { tokens } = await oauth2Client.getToken(code);
+export async function getTokensFromCode(code: string): Promise<{
+  access_token?: string | null;
+  refresh_token?: string | null;
+  expiry_date?: number | null;
+}> {
+  const client = createOAuth2Client();
+  const { tokens } = await client.getToken(code);
   return tokens;
 }
 
-export async function saveTokens(tokens: { access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null }) {
-  if (tokens.access_token) {
-    await prisma.userSetting.upsert({
-      where: { key: 'google_access_token' },
-      update: { value: tokens.access_token },
-      create: { key: 'google_access_token', value: tokens.access_token },
+export async function saveAccount(
+  email: string,
+  tokens: { access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null },
+  label?: string
+) {
+  const existing = await prisma.googleAccount.findUnique({ where: { email } });
+
+  const data = {
+    accessToken: encrypt(tokens.access_token || ''),
+    refreshToken: encrypt(tokens.refresh_token || ''),
+    tokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : new Date(Date.now() + 3600 * 1000),
+    scopes: SCOPES,
+    label: label || null,
+  };
+
+  if (existing) {
+    return prisma.googleAccount.update({
+      where: { email },
+      data,
     });
   }
 
-  if (tokens.refresh_token) {
-    await prisma.userSetting.upsert({
-      where: { key: 'google_refresh_token' },
-      update: { value: tokens.refresh_token },
-      create: { key: 'google_refresh_token', value: tokens.refresh_token },
-    });
-  }
+  const accountCount = await prisma.googleAccount.count();
 
-  if (tokens.expiry_date) {
-    await prisma.userSetting.upsert({
-      where: { key: 'google_token_expiry' },
-      update: { value: tokens.expiry_date.toString() },
-      create: { key: 'google_token_expiry', value: tokens.expiry_date.toString() },
-    });
-  }
+  return prisma.googleAccount.create({
+    data: {
+      email,
+      ...data,
+      isDefault: accountCount === 0,
+    },
+  });
 }
 
-export async function getStoredTokens() {
-  const [accessToken, refreshToken, expiry] = await Promise.all([
-    prisma.userSetting.findUnique({ where: { key: 'google_access_token' } }),
-    prisma.userSetting.findUnique({ where: { key: 'google_refresh_token' } }),
-    prisma.userSetting.findUnique({ where: { key: 'google_token_expiry' } }),
-  ]);
-
-  if (!accessToken || !refreshToken) {
-    return null;
-  }
+export async function loadAccount(accountId: string) {
+  const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+  if (!account) return null;
 
   return {
-    access_token: accessToken.value,
-    refresh_token: refreshToken.value,
-    expiry_date: expiry ? parseInt(expiry.value, 10) : null,
+    ...account,
+    accessToken: decrypt(account.accessToken),
+    refreshToken: decrypt(account.refreshToken),
   };
 }
 
-export async function getAuthenticatedClient() {
-  const tokens = await getStoredTokens();
+export async function refreshAccountTokens(accountId: string) {
+  const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+  if (!account) throw new Error('Account not found');
 
-  if (!tokens) {
-    throw new Error('No Google tokens found. Please authenticate first.');
-  }
-
-  oauth2Client.setCredentials(tokens);
-
-  oauth2Client.on('tokens', async (newTokens) => {
-    await saveTokens(newTokens);
+  const client = createOAuth2Client();
+  client.setCredentials({
+    access_token: decrypt(account.accessToken),
+    refresh_token: decrypt(account.refreshToken),
+    expiry_date: account.tokenExpiry.getTime(),
   });
 
-  return oauth2Client;
+  const { credentials } = await client.refreshAccessToken();
+
+  await prisma.googleAccount.update({
+    where: { id: accountId },
+    data: {
+      accessToken: encrypt(credentials.access_token || ''),
+      refreshToken: encrypt(credentials.refresh_token || decrypt(account.refreshToken)),
+      tokenExpiry: credentials.expiry_date ? new Date(credentials.expiry_date) : account.tokenExpiry,
+    },
+  });
+
+  return credentials;
 }
 
-export async function getUserEmail(): Promise<string> {
-  const auth = await getAuthenticatedClient();
+export async function getAccountByEmail(email: string) {
+  return prisma.googleAccount.findUnique({ where: { email } });
+}
+
+export async function listAccounts() {
+  return prisma.googleAccount.findMany({
+    select: {
+      id: true,
+      email: true,
+      label: true,
+      isDefault: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+export async function deleteAccount(accountId: string) {
+  const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+  if (!account) throw new Error('Account not found');
+
+  await prisma.bill.updateMany({
+    where: { googleAccountId: accountId },
+    data: { googleAccountId: null },
+  });
+
+  await prisma.calendarEvent.updateMany({
+    where: { googleAccountId: accountId },
+    data: { googleAccountId: null },
+  });
+
+  await prisma.googleAccount.delete({ where: { id: accountId } });
+}
+
+export async function setDefaultAccount(accountId: string) {
+  await prisma.googleAccount.updateMany({
+    where: { isDefault: true },
+    data: { isDefault: false },
+  });
+
+  return prisma.googleAccount.update({
+    where: { id: accountId },
+    data: { isDefault: true },
+  });
+}
+
+export async function getDefaultAccount() {
+  return prisma.googleAccount.findFirst({
+    where: { isDefault: true },
+  });
+}
+
+export async function getAuthenticatedClient(accountId?: string) {
+  let account;
+
+  if (accountId) {
+    const loaded = await loadAccount(accountId);
+    if (!loaded) throw new Error('Google account not found');
+    account = loaded;
+  } else {
+    const defaultAccount = await getDefaultAccount();
+    if (!defaultAccount) throw new Error('No Google account connected. Please authenticate first.');
+    const loaded = await loadAccount(defaultAccount.id);
+    if (!loaded) throw new Error('Failed to load default account');
+    account = loaded;
+  }
+
+  const client = createOAuth2Client();
+  client.setCredentials({
+    access_token: account.accessToken,
+    refresh_token: account.refreshToken,
+    expiry_date: account.tokenExpiry.getTime(),
+  });
+
+  if (account.tokenExpiry.getTime() < Date.now()) {
+    try {
+      const { credentials } = await client.refreshAccessToken();
+
+      await prisma.googleAccount.update({
+        where: { id: account.id },
+        data: {
+          accessToken: encrypt(credentials.access_token || ''),
+          refreshToken: encrypt(credentials.refresh_token || account.refreshToken),
+          tokenExpiry: credentials.expiry_date ? new Date(credentials.expiry_date) : account.tokenExpiry,
+        },
+      });
+
+      client.setCredentials(credentials);
+    } catch {
+      throw new Error(`Failed to refresh tokens for account ${account.email}. Please re-authenticate.`);
+    }
+  }
+
+  return client;
+}
+
+export async function getUserEmail(accountId?: string): Promise<string> {
+  const auth = await getAuthenticatedClient(accountId);
   const oauth2 = google.oauth2({ version: 'v2', auth });
   const { data } = await oauth2.userinfo.get();
   return data.email || '';
