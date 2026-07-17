@@ -157,4 +157,47 @@ router.delete('/notes/:id', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/notes/search', async (req: Request, res: Response) => {
+  try {
+    const q = String(req.query.q || '');
+    const limit = parseInt(String(req.query.limit || '20'), 10);
+
+    if (!q.trim()) {
+      res.json({ notes: [] });
+      return;
+    }
+
+    const searchTerm = q
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((term) => `${term}:*`)
+      .join(' & ');
+
+    const notes = await prisma.$queryRaw`
+      SELECT 
+        n.id,
+        n.title,
+        n.content,
+        n."folderId",
+        n.summary,
+        n."createdAt",
+        n."updatedAt",
+        ts_rank(
+          to_tsvector('english', coalesce(n.title, '') || ' ' || coalesce(n.content, '')),
+          to_tsquery('english', ${searchTerm})
+        ) as rank
+      FROM "Note" n
+      WHERE to_tsvector('english', coalesce(n.title, '') || ' ' || coalesce(n.content, '')) 
+            @@ to_tsquery('english', ${searchTerm})
+      ORDER BY rank DESC
+      LIMIT ${limit}
+    `;
+
+    res.json({ notes });
+  } catch (error) {
+    console.error('Error searching notes:', error);
+    res.status(500).json({ error: 'Failed to search notes' });
+  }
+});
+
 export default router;
