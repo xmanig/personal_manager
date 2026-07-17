@@ -1,0 +1,21 @@
+# Development stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install backend dependencies
+COPY backend/package*.json ./
+RUN npm ci
+
+# Install frontend dependencies
+COPY frontend/package*.json ./frontend/
+WORKDIR /app/frontend
+RUN npm ci
+
+WORKDIR /app
+
+COPY . .
+
+EXPOSE 3001 1420
+
+CMD ["sh", "-c", "cd backend && npx prisma migrate dev --skip-generate & cd backend && npm run dev & cd frontend && npm run dev -- --host 0.0.0.0"]

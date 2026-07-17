@@ -1,0 +1,8 @@
+node_modules
+.git
+*.md
+.opencode
+frontend/dist
+backend/dist
+.env
+*.log

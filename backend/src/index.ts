@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import path from 'path';
 import authRoutes from './routes/auth';
 import notesRoutes from './routes/notes';
 import tagsRoutes from './routes/tags';
@@ -26,6 +27,12 @@ app.use('/api', tagsRoutes);
 app.use('/api', foldersRoutes);
 app.use('/api', calendarRoutes);
 app.use('/api/bills', billsRoutes);
+
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDist));
+app.get('/{*path}', (req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
