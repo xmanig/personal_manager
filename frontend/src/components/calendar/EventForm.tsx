@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createCalendarEvent } from '../../lib/calendar-api';
+import { Button } from '../ui/Button';
 
 interface EventFormProps {
   initialDate?: Date;
@@ -59,101 +60,101 @@ export function EventForm({ initialDate, onClose, onEventCreated }: EventFormPro
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Create Event</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            &times;
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-lg animate-in fade-in zoom-in-95 rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Create Event</h2>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Title *</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Title <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
               placeholder="Event title"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
               rows={3}
-              placeholder="Event description"
+              placeholder="Add a description..."
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Location</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Location</label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full rounded border px-3 py-2"
-              placeholder="Event location"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
+              placeholder="Add a location"
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
-              id="allDay"
               checked={isAllDay}
               onChange={(e) => setIsAllDay(e.target.checked)}
-              className="rounded"
+              className="rounded border-gray-300 text-primary-600 outline-none focus:ring-primary-500"
             />
-            <label htmlFor="allDay" className="text-sm text-gray-700">
-              All day event
-            </label>
-          </div>
+            All day event
+          </label>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Start *</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Start</label>
               <input
                 type={isAllDay ? 'date' : 'datetime-local'}
                 value={isAllDay ? startTime.split('T')[0] : startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">End *</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">End</label>
               <input
                 type={isAllDay ? 'date' : 'datetime-local'}
                 value={isAllDay ? endTime.split('T')[0] : endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
               />
             </div>
           </div>
 
-          {error && <div className="text-sm text-red-500">{error}</div>}
+          {error && (
+            <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100"
-            >
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Event'}
-            </button>
+            </Button>
+            <Button type="submit" loading={loading}>
+              Create Event
+            </Button>
           </div>
         </form>
       </div>

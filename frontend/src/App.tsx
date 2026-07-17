@@ -5,7 +5,6 @@ import { CalendarPage } from './pages/CalendarPage';
 import { BillsPage } from './pages/BillsPage';
 import { Note } from './types';
 import { useState } from 'react';
-import './App.css';
 
 function NotesPage() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -16,18 +15,21 @@ function NotesPage() {
 
   return (
     <div className="flex h-full">
-      <div className="w-96 border-r">
+      <div className="w-96 shrink-0 border-r border-gray-200">
         <NotesList
           onSelectNote={setSelectedNote}
           selectedNoteId={selectedNote?.id}
         />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         {selectedNote ? (
           <MarkdownEditor note={selectedNote} onSave={handleSave} />
         ) : (
-          <div className="flex h-full items-center justify-center text-gray-500">
-            Select a note to edit
+          <div className="flex h-full flex-col items-center justify-center text-gray-400">
+            <svg className="mb-4 h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-sm">Select a note to start editing</p>
           </div>
         )}
       </div>
@@ -35,51 +37,92 @@ function NotesPage() {
   );
 }
 
+const navItems = [
+  {
+    path: '/',
+    label: 'Notes',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+      </svg>
+    ),
+  },
+  {
+    path: '/calendar',
+    label: 'Calendar',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      </svg>
+    ),
+  },
+  {
+    path: '/bills',
+    label: 'Bills',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+      </svg>
+    ),
+  },
+];
+
 function Sidebar() {
   const location = useLocation();
 
-  const navItems = [
-    { path: '/', label: 'Notes', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { path: '/calendar', label: 'Calendar', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { path: '/bills', label: 'Bills', icon: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z' },
-  ];
-
   return (
-    <nav className="w-48 border-r bg-gray-50 p-4">
-      <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <svg className="h-8 w-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    <nav className="flex h-full w-60 flex-col border-r border-gray-200 bg-gray-50/80">
+      <div className="flex h-14 items-center gap-2.5 border-b border-gray-200 px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
+          <svg className="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
           </svg>
-          <span className="text-lg font-semibold">Personal Manager</span>
+        </div>
+        <span className="text-sm font-semibold text-gray-900">Personal Manager</span>
+      </div>
+
+      <div className="flex-1 px-3 py-4">
+        <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400">
+          Menu
+        </div>
+        <ul className="space-y-1">
+          {navItems.map((item) => {
+            const isActive = item.path === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(item.path);
+
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <span className={isActive ? 'text-primary-600' : 'text-gray-400'}>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className="border-t border-gray-200 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+            U
+          </div>
+          <div className="flex-1 truncate">
+            <div className="text-sm font-medium text-gray-900">User</div>
+            <div className="text-xs text-gray-500">Local account</div>
+          </div>
         </div>
       </div>
-      
-      <ul className="space-y-1">
-        {navItems.map((item) => {
-          const isActive = item.path === '/' 
-            ? location.pathname === '/' 
-            : location.pathname.startsWith(item.path);
-          
-          return (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
     </nav>
   );
 }
@@ -87,7 +130,7 @@ function Sidebar() {
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-white">
         <Sidebar />
         <main className="flex-1 overflow-hidden">
           <Routes>

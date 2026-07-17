@@ -3,6 +3,9 @@ import { MonthView } from '../components/calendar/MonthView';
 import { WeekView } from '../components/calendar/WeekView';
 import { DayView } from '../components/calendar/DayView';
 import { EventForm } from '../components/calendar/EventForm';
+import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 import { CalendarEvent } from '../types/calendar';
 import { fetchCalendarEvents, deleteCalendarEvent } from '../lib/calendar-api';
 
@@ -21,10 +24,8 @@ export function CalendarPage() {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -33,14 +34,12 @@ export function CalendarPage() {
 
   const handleSync = useCallback(async () => {
     if (!isOnline) return;
-
     setSyncing(true);
     try {
       const from = new Date();
       from.setMonth(from.getMonth() - 1);
       const to = new Date();
       to.setMonth(to.getMonth() + 1);
-
       await fetchCalendarEvents(from, to);
       setLastSynced(new Date());
       setRefreshKey((k) => k + 1);
@@ -51,18 +50,8 @@ export function CalendarPage() {
     }
   }, [isOnline]);
 
-  const handleSelectEvent = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-  };
-
-  const handleSelectDate = (date: Date) => {
-    setSelectedDate(date);
-    setShowEventForm(true);
-  };
-
   const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
-
     try {
       await deleteCalendarEvent(selectedEvent.id);
       setSelectedEvent(null);
@@ -72,127 +61,127 @@ export function CalendarPage() {
     }
   };
 
+  const views: { key: ViewMode; label: string }[] = [
+    { key: 'month', label: 'Month' },
+    { key: 'week', label: 'Week' },
+    { key: 'day', label: 'Day' },
+  ];
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b p-4">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('month')}
-            className={`rounded px-3 py-1 ${
-              viewMode === 'month' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'
-            }`}
-          >
-            Month
-          </button>
-          <button
-            onClick={() => setViewMode('week')}
-            className={`rounded px-3 py-1 ${
-              viewMode === 'week' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'
-            }`}
-          >
-            Week
-          </button>
-          <button
-            onClick={() => setViewMode('day')}
-            className={`rounded px-3 py-1 ${
-              viewMode === 'day' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'
-            }`}
-          >
-            Day
-          </button>
+      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold text-gray-900">Calendar</h1>
+          <div className="flex rounded-xl border border-gray-200 bg-gray-50 p-0.5">
+            {views.map((v) => (
+              <button
+                key={v.key}
+                onClick={() => setViewMode(v.key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  viewMode === v.key
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm">
-            <div
-              className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}
-            />
-            <span className="text-gray-600">{isOnline ? 'Online' : 'Offline'}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <div className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
+            {isOnline ? 'Online' : 'Offline'}
           </div>
-
           {lastSynced && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               Synced {lastSynced.toLocaleTimeString()}
             </span>
           )}
-
-          <button
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={handleSync}
-            disabled={syncing || !isOnline}
-            className="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600 disabled:opacity-50"
+            loading={syncing}
+            disabled={!isOnline}
           >
-            {syncing ? 'Syncing...' : 'Sync'}
-          </button>
-
-          <button
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            Sync
+          </Button>
+          <Button
+            size="sm"
             onClick={() => {
               setSelectedDate(new Date());
               setShowEventForm(true);
             }}
-            className="rounded bg-green-500 px-3 py-1 text-white hover:bg-green-600"
           >
-            + New Event
-          </button>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New Event
+          </Button>
         </div>
       </div>
 
-      <div className="relative flex-1" key={refreshKey}>
+      <div className="relative flex-1 overflow-hidden" key={refreshKey}>
         {viewMode === 'month' && (
-          <MonthView onSelectEvent={handleSelectEvent} onSelectDate={handleSelectDate} />
+          <MonthView
+            onSelectEvent={setSelectedEvent}
+            onSelectDate={(date) => {
+              setSelectedDate(date);
+              setShowEventForm(true);
+            }}
+          />
         )}
-        {viewMode === 'week' && <WeekView onSelectEvent={handleSelectEvent} />}
-        {viewMode === 'day' && <DayView onSelectEvent={handleSelectEvent} />}
+        {viewMode === 'week' && <WeekView onSelectEvent={setSelectedEvent} />}
+        {viewMode === 'day' && <DayView onSelectEvent={setSelectedEvent} />}
       </div>
 
-      {selectedEvent && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">{selectedEvent.title}</h3>
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                &times;
-              </button>
-            </div>
+      <Modal
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        title={selectedEvent?.title}
+      >
+        {selectedEvent && (
+          <div className="space-y-4">
             <div className="space-y-2 text-sm text-gray-600">
-              <p>
-                <strong>Start:</strong>{' '}
-                {new Date(selectedEvent.startTime).toLocaleString()}
-              </p>
-              <p>
-                <strong>End:</strong>{' '}
-                {new Date(selectedEvent.endTime).toLocaleString()}
-              </p>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                  {new Date(selectedEvent.startTime).toLocaleString()} —{' '}
+                  {new Date(selectedEvent.endTime).toLocaleString()}
+                </span>
+              </div>
               {selectedEvent.location && (
-                <p>
-                  <strong>Location:</strong> {selectedEvent.location}
-                </p>
+                <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                  </svg>
+                  <span>{selectedEvent.location}</span>
+                </div>
               )}
               {selectedEvent.description && (
-                <p>
-                  <strong>Description:</strong> {selectedEvent.description}
-                </p>
+                <p className="mt-2 text-gray-500">{selectedEvent.description}</p>
               )}
+              {selectedEvent.isAllDay && <Badge variant="primary">All day</Badge>}
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={handleDeleteEvent}
-                className="rounded px-4 py-2 text-red-600 hover:bg-red-50"
-              >
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="danger" size="sm" onClick={handleDeleteEvent}>
                 Delete
-              </button>
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100"
-              >
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setSelectedEvent(null)}>
                 Close
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {showEventForm && (
         <EventForm
@@ -201,9 +190,7 @@ export function CalendarPage() {
             setShowEventForm(false);
             setSelectedDate(undefined);
           }}
-          onEventCreated={() => {
-            setRefreshKey((k) => k + 1);
-          }}
+          onEventCreated={() => setRefreshKey((k) => k + 1)}
         />
       )}
     </div>
