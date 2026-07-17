@@ -1,0 +1,144 @@
+import { Router } from 'express';
+import { requireGoogleAuth } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
+import { searchBillEmails, downloadAttachment } from '../services/gmail-bills';
+import { parsePdf } from '../services/pdf-parser';
+import { extractBillData } from '../services/bill-extractor';
+
+const router = Router();
+
+router.get('/', async (req, res) => {
+  try {
+    const bills = await prisma.bill.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(bills);
+  } catch (err) {
+    console.error('Failed to fetch bills:', err);
+    res.status(500).json({ error: 'Failed to fetch bills' });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const bill = await prisma.bill.findUnique({
+      where: { id: String(req.params.id) },
+    });
+    if (!bill) {
+      res.status(404).json({ error: 'Bill not found' });
+      return;
+    }
+    res.json(bill);
+  } catch (err) {
+    console.error('Failed to fetch bill:', err);
+    res.status(500).json({ error: 'Failed to fetch bill' });
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  try {
+    const { vendor, amount, currency, dueDate, paidDate, category, status, notes, lineItems } =
+      req.body;
+
+    const bill = await prisma.bill.update({
+      where: { id: String(req.params.id) },
+      data: {
+        ...(vendor !== undefined && { vendor }),
+        ...(amount !== undefined && { amount: parseFloat(amount) }),
+        ...(currency !== undefined && { currency }),
+        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+        ...(paidDate !== undefined && { paidDate: paidDate ? new Date(paidDate) : null }),
+        ...(category !== undefined && { category }),
+        ...(status !== undefined && { status }),
+        ...(notes !== undefined && { notes }),
+        ...(lineItems !== undefined && { lineItems }),
+      },
+    });
+    res.json(bill);
+  } catch (err) {
+    console.error('Failed to update bill:', err);
+    res.status(500).json({ error: 'Failed to update bill' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.bill.delete({ where: { id: String(req.params.id) } });
+    res.status(204).end();
+  } catch (err) {
+    console.error('Failed to delete bill:', err);
+    res.status(500).json({ error: 'Failed to delete bill' });
+  }
+});
+
+router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
+  try {
+    const { rules } = req.body;
+    const oauth2Client = (req as any).googleAuth;
+
+    const emails = await searchBillEmails(rules || { hasAttachment: true }, oauth2Client);
+
+    const bills = [];
+    for (const email of emails) {
+      const existing = await prisma.bill.findFirst({
+        where: { gmailMessageId: email.messageId },
+      });
+      if (existing) continue;
+
+      for (const attachment of email.attachments) {
+        const buffer = await downloadAttachment(
+          email.messageId,
+          attachment.attachmentId,
+          oauth2Client
+        );
+
+        const pdfResult = await parsePdf(buffer);
+
+        let extraction = null;
+        if (!pdfResult.isScanned && pdfResult.text) {
+          extraction = await extractBillData(pdfResult.text);
+        }
+
+        const bill = await prisma.bill.create({
+          data: {
+            gmailMessageId: email.messageId,
+            vendor: extraction?.vendor || 'Unknown',
+            amount: extraction?.amount || 0,
+            currency: extraction?.currency || 'USD',
+            dueDate: extraction?.dueDate ? new Date(extraction.dueDate) : null,
+            category: extraction?.category || 'other',
+            status: 'pending',
+            rawText: pdfResult.text,
+            pdfPath: null,
+            lineItems: extraction?.lineItems || [],
+            notes: `Fetched from Gmail: ${email.subject}`,
+          },
+        });
+        bills.push(bill);
+      }
+    }
+
+    res.json({ fetched: bills.length, bills });
+  } catch (err) {
+    console.error('Failed to fetch bills from Gmail:', err);
+    res.status(500).json({ error: 'Failed to fetch bills' });
+  }
+});
+
+router.post('/parse', requireGoogleAuth, async (req, res) => {
+  try {
+    const { rawText } = req.body;
+    if (!rawText) {
+      res.status(400).json({ error: 'rawText is required' });
+      return;
+    }
+
+    const extraction = await extractBillData(rawText);
+    res.json(extraction);
+  } catch (err) {
+    console.error('Failed to parse bill:', err);
+    res.status(500).json({ error: 'Failed to parse bill' });
+  }
+});
+
+export default router;

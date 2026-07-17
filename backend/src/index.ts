@@ -5,6 +5,7 @@ import notesRoutes from './routes/notes';
 import tagsRoutes from './routes/tags';
 import foldersRoutes from './routes/folders';
 import calendarRoutes from './routes/calendar';
+import billsRoutes from './routes/bills';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -24,6 +25,7 @@ app.use('/api', notesRoutes);
 app.use('/api', tagsRoutes);
 app.use('/api', foldersRoutes);
 app.use('/api', calendarRoutes);
+app.use('/api/bills', billsRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
