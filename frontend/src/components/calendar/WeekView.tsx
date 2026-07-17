@@ -5,9 +5,11 @@ import { Button } from '../ui/Button';
 
 interface WeekViewProps {
   onSelectEvent: (event: CalendarEvent) => void;
+  accountId?: string;
+  getAccountColor?: (event: CalendarEvent) => string;
 }
 
-export function WeekView({ onSelectEvent }: WeekViewProps) {
+export function WeekView({ onSelectEvent, accountId, getAccountColor }: WeekViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
-      const response = await fetchCalendarEvents(startOfWeek, endOfWeek);
+      const response = await fetchCalendarEvents(startOfWeek, endOfWeek, accountId);
       setEvents(response.events);
     } catch (err) {
       console.error('Failed to load events:', err);
@@ -128,7 +130,9 @@ export function WeekView({ onSelectEvent }: WeekViewProps) {
                     <div
                       key={event.id}
                       onClick={() => onSelectEvent(event)}
-                      className="absolute left-0.5 right-0.5 z-10 cursor-pointer overflow-hidden rounded-lg bg-primary-500 px-1.5 py-1 text-xs text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow dark:bg-primary-600 dark:hover:bg-primary-500"
+                      className={`absolute left-0.5 right-0.5 z-10 cursor-pointer overflow-hidden rounded-lg px-1.5 py-1 text-xs text-white shadow-sm transition-all hover:shadow ${
+                        getAccountColor ? getAccountColor(event) : 'bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500'
+                      }`}
                       style={{ top: `${startHour * hourHeight}px`, height: `${Math.max(duration * hourHeight, 20)}px` }}
                     >
                       <div className="truncate font-medium">{event.title}</div>
