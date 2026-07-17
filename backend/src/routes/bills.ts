@@ -78,6 +78,19 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
+    if (!bill) {
+      res.status(404).json({ error: 'Bill not found' });
+      return;
+    }
+
+    if (bill.pdfUrl) {
+      const pdfPath = path.join(PDFS_DIR, bill.pdfUrl);
+      if (fs.existsSync(pdfPath)) {
+        fs.unlinkSync(pdfPath);
+      }
+    }
+
     await prisma.bill.delete({ where: { id: String(req.params.id) } });
     res.status(204).end();
   } catch (err) {
