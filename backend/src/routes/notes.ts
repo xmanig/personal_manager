@@ -200,4 +200,34 @@ router.get('/notes/search', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/notes/:id/summarize', async (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id);
+
+    const note = await prisma.note.findUnique({ where: { id } });
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    if (!note.content) {
+      res.status(400).json({ error: 'Note has no content to summarize' });
+      return;
+    }
+
+    const { summarizeNote } = await import('../services/ai');
+    const summary = await summarizeNote(note.content);
+
+    const updated = await prisma.note.update({
+      where: { id },
+      data: { summary },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error summarizing note:', error);
+    res.status(500).json({ error: 'Failed to summarize note' });
+  }
+});
+
 export default router;
