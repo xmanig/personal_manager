@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import logo from './assets/logo.png';
 import { NotesList } from './pages/NotesList';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { CalendarPage } from './pages/CalendarPage';
@@ -100,8 +101,8 @@ function Sidebar() {
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary">account_balance_wallet</span>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src={logo} alt="Logo" className="h-8 w-8" />
           </div>
           <div>
             <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight">Personal Manager</h1>
