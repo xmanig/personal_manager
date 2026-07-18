@@ -141,7 +141,7 @@ router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Reque
   }
 });
 
-router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, res: Response) => {
+router.get('/auth/accounts/:id/status', async (req: Request, res: Response) => {
   try {
     const accountId = String(req.params.id);
     const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
