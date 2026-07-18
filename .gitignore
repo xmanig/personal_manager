@@ -46,3 +46,4 @@ google-credentials.json
 
 # Misc
 *.local
+backups/*.sql.gz

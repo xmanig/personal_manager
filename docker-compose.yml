@@ -65,6 +65,21 @@ services:
       - ./frontend/src:/app/frontend/src
     restart: unless-stopped
 
+  backup:
+    image: postgres:16-alpine
+    profiles: ["manual"]
+    environment:
+      PGPASSWORD: postgres
+      BACKUP_DIR: /backups
+    volumes:
+      - ./scripts/backup.sh:/usr/local/bin/backup.sh
+      - ./backups:/backups
+      - postgres_data:/var/lib/postgresql/data:ro
+    entrypoint: ["sh", "/usr/local/bin/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   pdf_data:
