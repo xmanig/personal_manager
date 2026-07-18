@@ -101,7 +101,7 @@ function Sidebar() {
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
       <div className="p-4">
         <div className="mb-6">
-          <img src={logo} alt="Logo" className="w-1/2 h-auto mx-auto" />
+          <img src={logo} alt="Logo" className="w-1/2 h-auto mx-auto mix-blend-screen" />
         </div>
         <div className="space-y-1">
           <p className="text-[11px] font-bold text-outline uppercase tracking-wider px-4 mb-2 font-label-md">Main Menu</p>
