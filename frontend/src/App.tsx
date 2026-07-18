@@ -153,7 +153,7 @@ function Sidebar() {
                         ) : (
                           <>
                             <div className="flex items-center gap-1">
-                              <div className={`h-2 w-2 rounded-full ${accountStatuses[acc.id]?.needsReconnect ? 'bg-tertiary' : 'bg-secondary'}`} />
+                              <div className={`h-2 w-2 rounded-full ${accountStatuses[acc.id]?.needsReconnect ? 'bg-tertiary' : 'bg-emerald-400'}`} />
                               <span className="font-medium text-on-surface truncate">{acc.label || acc.email}</span>
                               {acc.isDefault && (
                                 <span className="text-[10px] text-primary font-label-md">Default</span>
