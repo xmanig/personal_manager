@@ -12,7 +12,7 @@ import {
   getDefaultAccount,
   createOAuth2Client,
 } from '../services/google-auth';
-import { requireGoogleAuth } from '../middleware/auth';
+import { requireGoogleAuth, requireOptionalAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { decrypt } from '../lib/encryption';
 import { validate, updateLabelSchema } from '../lib/validation';
@@ -82,7 +82,7 @@ router.post('/auth/disconnect', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/auth/accounts', requireGoogleAuth, async (req: Request, res: Response) => {
+router.get('/auth/accounts', requireOptionalAuth, async (req: Request, res: Response) => {
   try {
     const accounts = await listAccounts();
     res.json({ accounts });
