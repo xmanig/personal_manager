@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import authRoutes from './routes/auth';
 import notesRoutes from './routes/notes';
@@ -13,6 +15,8 @@ import { logger } from './lib/logger';
 const app = express();
 const port = process.env.PORT || 3001;
 
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:1420', credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
