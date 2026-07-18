@@ -4,10 +4,15 @@ const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 
+const TEST_KEY = '71b88f1b2f4bda08d2262918e825f9b04ad68b820bc8a54c34abcf864d0dec86';
+
 function getKey(): Buffer {
   const key = process.env.ENCRYPTION_KEY;
   if (!key) {
     throw new Error('ENCRYPTION_KEY environment variable is required');
+  }
+  if (key === TEST_KEY && process.env.NODE_ENV === 'production') {
+    throw new Error('ENCRYPTION_KEY is set to the known test key. Generate a unique key for production.');
   }
   return Buffer.from(key, 'hex');
 }

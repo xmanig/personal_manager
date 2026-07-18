@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 
-process.env.ENCRYPTION_KEY = '71b88f1b2f4bda08d2262918e825f9b04ad68b820bc8a54c34abcf864d0dec86';
 
 import { encrypt, decrypt } from '../lib/encryption';
 
@@ -26,8 +25,16 @@ describe('encryption', () => {
   });
 
   it('should throw when ENCRYPTION_KEY is missing', () => {
+    const saved = process.env.ENCRYPTION_KEY;
     delete process.env.ENCRYPTION_KEY;
     expect(() => encrypt('x')).toThrow('ENCRYPTION_KEY');
-    process.env.ENCRYPTION_KEY = '71b88f1b2f4bda08d2262918e825f9b04ad68b820bc8a54c34abcf864d0dec86';
+    process.env.ENCRYPTION_KEY = saved;
+  });
+
+  it('should throw in production when using the test key', () => {
+    const savedNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    expect(() => encrypt('x')).toThrow('Generate a unique key');
+    process.env.NODE_ENV = savedNodeEnv;
   });
 });
