@@ -8,6 +8,7 @@ export interface Bill {
   dueDate: string | null;
   paidDate: string | null;
   category: string;
+  direction: string;
   status: string;
   notes: string | null;
   invoiceNumber: string | null;
@@ -43,3 +44,5 @@ export const BILL_CATEGORIES = [
 ] as const;
 
 export const BILL_STATUSES = ['pending', 'paid', 'overdue', 'cancelled'] as const;
+
+export const BILL_DIRECTIONS = ['payable', 'receivable'] as const;
