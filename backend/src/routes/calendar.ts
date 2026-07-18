@@ -12,8 +12,8 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
       ? new Date(String(req.query.to))
       : new Date(from.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const calendar = (req as any).googleAuth;
-    const googleAccount = (req as any).googleAccount;
+    const calendar = req.googleAuth!;
+    const googleAccount = req.googleAccount;
 
     const { google } = await import('googleapis');
     const calendarApi = google.calendar({ version: 'v3', auth: calendar });
@@ -109,8 +109,8 @@ router.post('/calendar/events', requireGoogleAuth, validate(createEventSchema), 
   try {
     const { title, description, startTime, endTime, location, isAllDay, googleAccountId } = req.body;
 
-    const calendar = (req as any).googleAuth;
-    const googleAccount = (req as any).googleAccount;
+    const calendar = req.googleAuth!;
+    const googleAccount = req.googleAccount;
     const { google } = await import('googleapis');
     const calendarApi = google.calendar({ version: 'v3', auth: calendar });
 
@@ -215,11 +215,11 @@ router.delete('/calendar/events/:id', requireGoogleAuth, async (req: Request, re
       return;
     }
 
-    const calendar = (req as any).googleAuth;
+    const calendar = req.googleAuth!;
     const { google } = await import('googleapis');
     const calendarApi = google.calendar({ version: 'v3', auth: calendar });
 
-    await calendarApi.events.delete({
+    await calendarApi.events.update({
       calendarId: 'primary',
       eventId: existing.googleEventId,
     });

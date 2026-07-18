@@ -165,8 +165,8 @@ router.delete('/:id', async (req, res) => {
 router.post('/fetch-gmail', requireGoogleAuth, validate(fetchGmailSchema), async (req, res) => {
   try {
     const { rules, googleAccountId } = req.body;
-    const oauth2Client = (req as any).googleAuth;
-    const googleAccount = (req as any).googleAccount;
+    const oauth2Client = req.googleAuth!;
+    const googleAccount = req.googleAccount;
 
     const effectiveAccountId = googleAccountId || googleAccount?.id || null;
     const emails = await searchBillEmails(rules || { hasAttachment: true }, oauth2Client);

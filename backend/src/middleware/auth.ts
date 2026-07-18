@@ -14,8 +14,8 @@ export async function requireGoogleAuth(req: Request, res: Response, next: NextF
       account = await getDefaultAccount();
     }
 
-    (req as any).googleAuth = client;
-    (req as any).googleAccount = account;
+    req.googleAuth = client;
+    req.googleAccount = account;
     next();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Authentication check failed';
