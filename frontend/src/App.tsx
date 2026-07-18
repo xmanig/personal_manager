@@ -101,7 +101,7 @@ function Sidebar() {
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
       <div className="p-4">
         <div className="mb-6">
-          <svg className="w-1/2 h-auto mx-auto" viewBox="0 0 200 40" fill="none">
+          <svg className="w-full h-auto" viewBox="0 0 200 40" fill="none">
             <rect width="40" height="40" rx="8" fill="url(#logo-grad)"/>
             <path d="M12 20l4-4 4 4-4 4-4-4z" fill="#0b1326"/>
             <path d="M20 14l-4 4 4 4 4-4-4-4z" fill="#0b1326" opacity="0.6"/>
