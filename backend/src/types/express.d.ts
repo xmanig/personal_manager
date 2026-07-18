@@ -11,6 +11,7 @@ declare global {
         tokenExpiry: Date;
         scopes: string[];
         filterRules: any;
+        lastGmailFetch: Date | null;
         isDefault: boolean;
       } | null;
     }

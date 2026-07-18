@@ -48,10 +48,11 @@ model GoogleAccount {
   refreshToken String
   tokenExpiry  DateTime
   scopes       String[]
-  filterRules  Json?
-  isDefault    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  filterRules    Json?
+  lastGmailFetch DateTime?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   bills          Bill[]
   calendarEvents CalendarEvent[]

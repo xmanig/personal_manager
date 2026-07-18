@@ -170,7 +170,15 @@ router.post('/fetch-gmail', requireGoogleAuth, validate(fetchGmailSchema), async
     const googleAccount = req.googleAccount;
 
     const effectiveAccountId = googleAccountId || googleAccount?.id || null;
-    const emails = await searchBillEmails(rules || { hasAttachment: true }, oauth2Client);
+
+    const effectiveRules = rules || { hasAttachment: true };
+
+    if (googleAccount?.lastGmailFetch && !effectiveRules.dateRange) {
+      const d = new Date(googleAccount.lastGmailFetch);
+      effectiveRules.dateRange = { from: `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}` };
+    }
+
+    const emails = await searchBillEmails(effectiveRules, oauth2Client);
 
     const bills = [];
     for (const email of emails) {
@@ -178,6 +186,13 @@ router.post('/fetch-gmail', requireGoogleAuth, validate(fetchGmailSchema), async
         const bill = await processGmailAttachment(email, attachment, oauth2Client, effectiveAccountId);
         if (bill) bills.push(bill);
       }
+    }
+
+    if (effectiveAccountId) {
+      await prisma.googleAccount.update({
+        where: { id: effectiveAccountId },
+        data: { lastGmailFetch: new Date() },
+      });
     }
 
     res.json({ fetched: bills.length, bills });
@@ -203,7 +218,14 @@ router.post('/fetch-gmail-all', requireGoogleAuth, async (req, res) => {
     for (const account of accounts) {
       try {
         const oauth2Client = await getAuthenticatedClient(account.id);
-        const emails = await searchBillEmails(rules || { hasAttachment: true }, oauth2Client);
+
+        const effectiveRules = rules || { hasAttachment: true };
+        if (account.lastGmailFetch && !effectiveRules.dateRange) {
+          const d = new Date(account.lastGmailFetch);
+          effectiveRules.dateRange = { from: `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}` };
+        }
+
+        const emails = await searchBillEmails(effectiveRules, oauth2Client);
 
         for (const email of emails) {
           for (const attachment of email.attachments) {
@@ -211,6 +233,11 @@ router.post('/fetch-gmail-all', requireGoogleAuth, async (req, res) => {
             if (bill) results.push(bill);
           }
         }
+
+        await prisma.googleAccount.update({
+          where: { id: account.id },
+          data: { lastGmailFetch: new Date() },
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         logger.error({ err: message }, `Failed to fetch Gmail bills for account ${account.email}:`);
