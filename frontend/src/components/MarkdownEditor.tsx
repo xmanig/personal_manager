@@ -74,47 +74,47 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2.5 dark:border-gray-800">
+    <div className="flex h-full flex-col bg-surface">
+      <div className="flex items-center justify-between border-b border-outline-variant/30 px-4 py-2.5">
         <input
           type="text"
           value={title}
           onChange={handleTitleChange}
           placeholder="Untitled"
-          className="flex-1 bg-transparent text-lg font-semibold text-gray-900 placeholder-gray-300 outline-none dark:text-gray-100 dark:placeholder-gray-600"
+          className="flex-1 bg-transparent font-headline-sm text-headline-sm text-on-surface placeholder:text-outline-variant outline-none"
         />
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex rounded-lg border border-outline-variant/50 bg-surface-container">
             <button
               onClick={() => setShowPreview(false)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg ${
                 !showPreview
-                  ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  ? 'bg-surface-container-high text-on-surface shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
               Write
             </button>
             <button
               onClick={() => setShowPreview(true)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg ${
                 showPreview
-                  ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  ? 'bg-surface-container-high text-on-surface shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
               Preview
             </button>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
             {saveStatus === 'saving' && (
-              <div className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+              <div className="h-2 w-2 animate-pulse rounded-full bg-tertiary" />
             )}
             {saveStatus === 'saved' && (
-              <div className="h-2 w-2 rounded-full bg-emerald-400" />
+              <div className="h-2 w-2 rounded-full bg-secondary" />
             )}
             {saveStatus === 'unsaved' && (
-              <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+              <div className="h-2 w-2 rounded-full bg-outline-variant" />
             )}
             <span>
               {saveStatus === 'saving'
@@ -129,44 +129,32 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 border-b border-gray-100 px-4 py-1.5 dark:border-gray-800">
+      <div className="flex items-center gap-1 border-b border-outline-variant/20 px-4 py-1.5">
         <ToolbarButton onClick={() => insertMarkdown('**', '**')} title="Bold">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">format_bold</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => insertMarkdown('*', '*')} title="Italic">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 16.5m0-16.5l-7.5 16.5m0-16.5h7.5m-15 0h3m3.75-4.5h3" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">format_italic</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => insertMarkdown('# ', '')} title="Heading">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 7.5l10.5-5.25L23 7.5m-20.25 0v9m20.25-9l-10.5 5.25M2.25 7.5l10.5 5.25" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">title</span>
         </ToolbarButton>
-        <div className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <div className="mx-1 h-4 w-px bg-outline-variant/50" />
         <ToolbarButton onClick={() => insertMarkdown('[', '](url)')} title="Link">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.318a4.5 4.5 0 00-6.364-6.364L4.757 8.25a4.5 4.5 0 006.364 6.364l4.5-4.5z" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">link</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => insertMarkdown('`', '`')} title="Code">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">code</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => insertMarkdown('\n```\n', '\n```\n')} title="Code Block">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">data_array</span>
         </ToolbarButton>
       </div>
 
       <div className="flex-1 overflow-hidden">
         {showPreview ? (
           <div className="h-full overflow-y-auto px-6 py-4">
-            <div className="prose max-w-3xl dark:text-gray-300">
+            <div className="markdown max-w-3xl">
               <ReactMarkdown>{content}</ReactMarkdown>
             </div>
           </div>
@@ -175,7 +163,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
             value={content}
             onChange={handleContentChange}
             placeholder="Start writing in Markdown..."
-            className="h-full w-full resize-none border-none bg-white px-6 py-4 font-mono text-sm text-gray-700 placeholder-gray-300 outline-none dark:bg-gray-950 dark:text-gray-300 dark:placeholder-gray-600"
+            className="h-full w-full resize-none border-none px-6 py-4 font-numeric-data text-sm text-on-surface placeholder:text-outline-variant outline-none bg-surface"
           />
         )}
       </div>
