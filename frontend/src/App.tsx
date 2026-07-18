@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { NotesList } from './pages/NotesList';
 import { MarkdownEditor } from './components/MarkdownEditor';
@@ -336,6 +337,10 @@ function Sidebar({ isDark, onToggleDark }: { isDark: boolean; onToggleDark: () =
   );
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+});
+
 function App() {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -354,18 +359,20 @@ function App() {
   }, [isDark]);
 
   return (
-    <BrowserRouter>
-      <div className="flex h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-        <Sidebar isDark={isDark} onToggleDark={() => setIsDark((d) => !d)} />
-        <main className="flex-1 overflow-hidden">
-          <Routes>
-            <Route path="/" element={<NotesPage />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/bills" element={<BillsPage />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="flex h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+          <Sidebar isDark={isDark} onToggleDark={() => setIsDark((d) => !d)} />
+          <main className="flex-1 overflow-hidden">
+            <Routes>
+              <Route path="/" element={<NotesPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/bills" element={<BillsPage />} />
+            </Routes>
+          </main>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
