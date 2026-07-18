@@ -32,7 +32,6 @@ RUN npm install --omit=dev
 COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/prisma ./backend/prisma
 COPY --from=backend-build /app/backend/prisma.config.ts ./backend/prisma.config.ts
-COPY --from=backend-build /app/backend/google-credentials.json ./backend/google-credentials.json
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 COPY backend/docker-entrypoint.sh ./
 

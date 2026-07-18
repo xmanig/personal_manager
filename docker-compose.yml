@@ -25,6 +25,10 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/personal_manager
       PORT: 3001
       NODE_ENV: production
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3001/api/auth/callback}
       AI_BASE_URL: ${AI_BASE_URL:-http://host.docker.internal:1234/v1}
       AI_MODEL: ${AI_MODEL:-google/gemma-4-e4b}
       AI_API_KEY: ${AI_API_KEY:-}
@@ -48,6 +52,10 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/personal_manager
       PORT: 3001
       NODE_ENV: development
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3001/api/auth/callback}
     depends_on:
       db:
         condition: service_healthy
