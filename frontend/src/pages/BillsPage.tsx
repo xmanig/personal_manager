@@ -18,6 +18,8 @@ export function BillsPage() {
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [accounts, setAccounts] = useState<GoogleAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+  const [sortKey, setSortKey] = useState<string>('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     loadBills();
@@ -77,6 +79,51 @@ export function BillsPage() {
     }
     await loadBills();
   };
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortFn = (a: Bill, b: Bill): number => {
+    let aVal: any, bVal: any;
+    switch (sortKey) {
+      case 'vendor': aVal = a.vendor?.toLowerCase(); bVal = b.vendor?.toLowerCase(); break;
+      case 'invoiceNumber': aVal = a.invoiceNumber || ''; bVal = b.invoiceNumber || ''; break;
+      case 'amount': aVal = a.amount; bVal = b.amount; break;
+      case 'dueDate': aVal = a.dueDate ? new Date(a.dueDate).getTime() : 0; bVal = b.dueDate ? new Date(b.dueDate).getTime() : 0; break;
+      case 'createdAt': aVal = new Date(a.createdAt).getTime(); bVal = new Date(b.createdAt).getTime(); break;
+      case 'category': aVal = a.category || ''; bVal = b.category || ''; break;
+      case 'direction': aVal = a.direction || ''; bVal = b.direction || ''; break;
+      case 'status': aVal = a.status || ''; bVal = b.status || ''; break;
+      default: return 0;
+    }
+    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  };
+
+  const SortHeader = ({ label, sortable, className }: { label: string; sortable: string; className?: string }) => (
+    <button
+      onClick={() => handleSort(sortable)}
+      className={`group flex items-center gap-1 ${className || ''} ${sortKey === sortable ? 'text-gray-900 dark:text-gray-200' : ''}`}
+    >
+      {label}
+      {sortKey === sortable ? (
+        <svg className={`h-3 w-3 transition-transform ${sortDir === 'desc' ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      ) : (
+        <svg className="h-3 w-3 opacity-0 group-hover:opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7l5-5 5 5M7 17l5 5 5-5" />
+        </svg>
+      )}
+    </button>
+  );
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this bill?')) return;
@@ -183,22 +230,20 @@ export function BillsPage() {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             <div className="flex items-center gap-4 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-              <div className="w-[10%]">Vendor</div>
-              <div className="w-[10%]">Invoice #</div>
-              <div className="w-[8%] text-right">Amount</div>
-              <div className="w-[9%]">Due Date</div>
-              <div className="w-[9%]">Received</div>
-              <div className="w-[8%]">Category</div>
-              <div className="w-[8%]">Direction</div>
-              <div className="w-[8%]">Status</div>
+              <div className="w-[10%]"><SortHeader label="Vendor" sortable="vendor" /></div>
+              <div className="w-[10%]"><SortHeader label="Invoice #" sortable="invoiceNumber" /></div>
+              <div className="w-[8%] text-right"><SortHeader label="Amount" sortable="amount" className="ml-auto" /></div>
+              <div className="w-[9%]"><SortHeader label="Due Date" sortable="dueDate" /></div>
+              <div className="w-[9%]"><SortHeader label="Received" sortable="createdAt" /></div>
+              <div className="w-[8%]"><SortHeader label="Category" sortable="category" /></div>
+              <div className="w-[8%]"><SortHeader label="Direction" sortable="direction" /></div>
+              <div className="w-[8%]"><SortHeader label="Status" sortable="status" /></div>
               <div className="w-[10%]">Account</div>
               <div className="flex-1 text-right">Actions</div>
             </div>
             {(() => {
               const groups: Record<string, Bill[]> = {};
-              const sorted = [...filteredBills].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-              );
+              const sorted = [...filteredBills].sort(sortFn);
               for (const bill of sorted) {
                 const d = new Date(bill.createdAt);
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
