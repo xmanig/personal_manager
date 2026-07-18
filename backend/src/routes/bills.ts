@@ -148,7 +148,7 @@ router.delete('/:id', requireGoogleAuth, async (req, res) => {
       return;
     }
 
-    if (bill.pdfUrl) {
+    if (bill.pdfUrl && !bill.pdfUrl.includes('..')) {
       const pdfPath = path.join(PDFS_DIR, bill.pdfUrl);
       if (fs.existsSync(pdfPath)) {
         fs.unlinkSync(pdfPath);
@@ -245,7 +245,18 @@ router.get('/:id/pdf', requireGoogleAuth, async (req, res) => {
       return;
     }
 
+    if (bill.pdfUrl.includes('..') || bill.pdfUrl.includes('/')) {
+      res.status(400).json({ error: 'Invalid PDF path' });
+      return;
+    }
+
     const pdfPath = path.join(PDFS_DIR, bill.pdfUrl);
+    const resolved = path.resolve(pdfPath);
+    if (!resolved.startsWith(path.resolve(PDFS_DIR))) {
+      res.status(400).json({ error: 'Invalid PDF path' });
+      return;
+    }
+
     if (!fs.existsSync(pdfPath)) {
       res.status(404).json({ error: 'PDF file not found on disk' });
       return;
