@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import logo from './assets/logo.png';
+
 import { NotesList } from './pages/NotesList';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { CalendarPage } from './pages/CalendarPage';
