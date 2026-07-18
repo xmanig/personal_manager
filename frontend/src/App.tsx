@@ -199,22 +199,25 @@ function Sidebar() {
         <div className="px-4 py-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
           {auth.connected ? (
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-[24px]">account_circle</span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary text-[24px]">account_circle</span>
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="font-bold text-on-surface truncate text-sm">{auth.email}</p>
+                    <p className="text-[11px] text-primary font-label-md">Connected</p>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <p className="font-bold text-on-surface truncate text-sm">{auth.email}</p>
-                  <p className="text-[11px] text-primary font-label-md">Connected</p>
+                <div className="relative group shrink-0">
+                  <button onClick={handleDisconnect} disabled={loading} className="p-1 text-outline hover:text-error transition-colors">
+                    <span className="material-symbols-outlined text-[18px]">power_settings_new</span>
+                  </button>
+                  <div className="absolute right-0 top-full mt-1 z-50 hidden group-hover:block whitespace-nowrap bg-surface-container-high text-on-surface text-[11px] px-2 py-1 rounded border border-outline-variant/30 shadow-lg">
+                    Disconnect all accounts
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handleDisconnect}
-                disabled={loading}
-                className="w-full py-1 text-[11px] text-outline hover:text-error transition-colors"
-              >
-                {loading ? 'Disconnecting...' : 'Disconnect All'}
-              </button>
             </div>
           ) : (
             <button onClick={handleConnect}
