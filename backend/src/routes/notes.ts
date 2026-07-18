@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
@@ -50,7 +51,7 @@ router.get('/notes', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching notes:', error);
+    logger.error({ err: error }, 'Error fetching notes:');
     res.status(500).json({ error: 'Failed to fetch notes' });
   }
 });
@@ -71,7 +72,7 @@ router.get('/notes/:id', async (req: Request, res: Response) => {
 
     res.json(note);
   } catch (error) {
-    console.error('Error fetching note:', error);
+    logger.error({ err: error }, 'Error fetching note:');
     res.status(500).json({ error: 'Failed to fetch note' });
   }
 });
@@ -97,7 +98,7 @@ router.post('/notes', async (req: Request, res: Response) => {
 
     res.status(201).json(note);
   } catch (error) {
-    console.error('Error creating note:', error);
+    logger.error({ err: error }, 'Error creating note:');
     res.status(500).json({ error: 'Failed to create note' });
   }
 });
@@ -133,7 +134,7 @@ router.put('/notes/:id', async (req: Request, res: Response) => {
 
     res.json(note);
   } catch (error) {
-    console.error('Error updating note:', error);
+    logger.error({ err: error }, 'Error updating note:');
     res.status(500).json({ error: 'Failed to update note' });
   }
 });
@@ -152,7 +153,7 @@ router.delete('/notes/:id', async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting note:', error);
+    logger.error({ err: error }, 'Error deleting note:');
     res.status(500).json({ error: 'Failed to delete note' });
   }
 });
@@ -195,7 +196,7 @@ router.get('/notes/search', async (req: Request, res: Response) => {
 
     res.json({ notes });
   } catch (error) {
-    console.error('Error searching notes:', error);
+    logger.error({ err: error }, 'Error searching notes:');
     res.status(500).json({ error: 'Failed to search notes' });
   }
 });
@@ -225,7 +226,7 @@ router.post('/notes/:id/summarize', async (req: Request, res: Response) => {
 
     res.json(updated);
   } catch (error) {
-    console.error('Error summarizing note:', error);
+    logger.error({ err: error }, 'Error summarizing note:');
     res.status(500).json({ error: 'Failed to summarize note' });
   }
 });
@@ -276,7 +277,7 @@ router.post('/notes/smart-search', async (req: Request, res: Response) => {
 
       res.json({ notes: rankedNotes, method: 'ai' });
     } catch (aiError) {
-      console.warn('AI search failed, falling back to text search:', aiError);
+      logger.warn({ err: aiError }, 'AI search failed, falling back to text search:');
 
       const searchTerm = query
         .split(/\s+/)
@@ -295,7 +296,7 @@ router.post('/notes/smart-search', async (req: Request, res: Response) => {
       res.json({ notes: results, method: 'fallback' });
     }
   } catch (error) {
-    console.error('Error in smart search:', error);
+    logger.error({ err: error }, 'Error in smart search:');
     res.status(500).json({ error: 'Failed to perform smart search' });
   }
 });

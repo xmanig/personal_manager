@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
@@ -11,7 +12,7 @@ router.get('/tags', async (req: Request, res: Response) => {
     });
     res.json(tags);
   } catch (error) {
-    console.error('Error fetching tags:', error);
+    logger.error({ err: error }, 'Error fetching tags:');
     res.status(500).json({ error: 'Failed to fetch tags' });
   }
 });
@@ -37,7 +38,7 @@ router.post('/tags', async (req: Request, res: Response) => {
 
     res.status(201).json(tag);
   } catch (error) {
-    console.error('Error creating tag:', error);
+    logger.error({ err: error }, 'Error creating tag:');
     res.status(500).json({ error: 'Failed to create tag' });
   }
 });
@@ -71,7 +72,7 @@ router.put('/tags/:id', async (req: Request, res: Response) => {
 
     res.json(tag);
   } catch (error) {
-    console.error('Error updating tag:', error);
+    logger.error({ err: error }, 'Error updating tag:');
     res.status(500).json({ error: 'Failed to update tag' });
   }
 });
@@ -90,7 +91,7 @@ router.delete('/tags/:id', async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting tag:', error);
+    logger.error({ err: error }, 'Error deleting tag:');
     res.status(500).json({ error: 'Failed to delete tag' });
   }
 });

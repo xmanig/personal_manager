@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireGoogleAuth } from '../middleware/auth';
@@ -77,7 +78,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
 
     res.json({ events: cachedEvents, synced: googleEvents.length });
   } catch (error) {
-    console.error('Error fetching calendar events:', error);
+    logger.error({ err: error }, 'Error fetching calendar events:');
     res.status(500).json({ error: 'Failed to fetch calendar events' });
   }
 });
@@ -100,7 +101,7 @@ router.get('/calendar/events/local', async (req: Request, res: Response) => {
 
     res.json({ events });
   } catch (error) {
-    console.error('Error fetching local calendar events:', error);
+    logger.error({ err: error }, 'Error fetching local calendar events:');
     res.status(500).json({ error: 'Failed to fetch calendar events' });
   }
 });
@@ -153,7 +154,7 @@ router.post('/calendar/events', requireGoogleAuth, validate(createEventSchema), 
 
     res.status(201).json(localEvent);
   } catch (error) {
-    console.error('Error creating calendar event:', error);
+    logger.error({ err: error }, 'Error creating calendar event:');
     res.status(500).json({ error: 'Failed to create calendar event' });
   }
 });
@@ -200,7 +201,7 @@ router.put('/calendar/events/:id', requireGoogleAuth, async (req: Request, res: 
 
     res.json(updated);
   } catch (error) {
-    console.error('Error updating calendar event:', error);
+    logger.error({ err: error }, 'Error updating calendar event:');
     res.status(500).json({ error: 'Failed to update calendar event' });
   }
 });
@@ -228,7 +229,7 @@ router.delete('/calendar/events/:id', requireGoogleAuth, async (req: Request, re
 
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting calendar event:', error);
+    logger.error({ err: error }, 'Error deleting calendar event:');
     res.status(500).json({ error: 'Failed to delete calendar event' });
   }
 });

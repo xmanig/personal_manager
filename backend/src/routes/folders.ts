@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
@@ -15,7 +16,7 @@ router.get('/folders', async (req: Request, res: Response) => {
     });
     res.json(folders);
   } catch (error) {
-    console.error('Error fetching folders:', error);
+    logger.error({ err: error }, 'Error fetching folders:');
     res.status(500).json({ error: 'Failed to fetch folders' });
   }
 });
@@ -40,7 +41,7 @@ router.get('/folders/:id', async (req: Request, res: Response) => {
 
     res.json(folder);
   } catch (error) {
-    console.error('Error fetching folder:', error);
+    logger.error({ err: error }, 'Error fetching folder:');
     res.status(500).json({ error: 'Failed to fetch folder' });
   }
 });
@@ -71,7 +72,7 @@ router.post('/folders', async (req: Request, res: Response) => {
 
     res.status(201).json(folder);
   } catch (error) {
-    console.error('Error creating folder:', error);
+    logger.error({ err: error }, 'Error creating folder:');
     res.status(500).json({ error: 'Failed to create folder' });
   }
 });
@@ -115,7 +116,7 @@ router.put('/folders/:id', async (req: Request, res: Response) => {
 
     res.json(folder);
   } catch (error) {
-    console.error('Error updating folder:', error);
+    logger.error({ err: error }, 'Error updating folder:');
     res.status(500).json({ error: 'Failed to update folder' });
   }
 });
@@ -148,7 +149,7 @@ router.delete('/folders/:id', async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting folder:', error);
+    logger.error({ err: error }, 'Error deleting folder:');
     res.status(500).json({ error: 'Failed to delete folder' });
   }
 });

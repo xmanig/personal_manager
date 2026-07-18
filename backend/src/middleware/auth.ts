@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Request, Response, NextFunction } from 'express';
 import { getAuthenticatedClient, getDefaultAccount, loadAccount } from '../services/google-auth';
 
@@ -19,7 +20,7 @@ export async function requireGoogleAuth(req: Request, res: Response, next: NextF
     next();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Authentication check failed';
-    console.error('Auth middleware error:', message);
+    logger.error({ err: message }, 'Auth middleware error:');
     res.status(401).json({ error: message });
   }
 }

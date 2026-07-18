@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { google } from 'googleapis';
 import {
@@ -50,7 +51,7 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
       email,
     });
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error({ err: error }, 'OAuth callback error:');
     res.status(500).json({ error: 'Failed to exchange authorization code' });
   }
 });
@@ -85,7 +86,7 @@ router.get('/auth/accounts', requireGoogleAuth, async (req: Request, res: Respon
     const accounts = await listAccounts();
     res.json({ accounts });
   } catch (error) {
-    console.error('Failed to list accounts:', error);
+    logger.error({ err: error }, 'Failed to list accounts:');
     res.status(500).json({ error: 'Failed to list accounts' });
   }
 });
@@ -95,7 +96,7 @@ router.delete('/auth/accounts/:id', requireGoogleAuth, async (req: Request, res:
     await deleteAccount(String(req.params.id));
     res.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete account:', error);
+    logger.error({ err: error }, 'Failed to delete account:');
     res.status(500).json({ error: 'Failed to delete account' });
   }
 });
@@ -105,7 +106,7 @@ router.put('/auth/accounts/:id/default', requireGoogleAuth, async (req: Request,
     await setDefaultAccount(String(req.params.id));
     res.json({ success: true });
   } catch (error) {
-    console.error('Failed to set default account:', error);
+    logger.error({ err: error }, 'Failed to set default account:');
     res.status(500).json({ error: 'Failed to set default account' });
   }
 });
@@ -119,7 +120,7 @@ router.put('/auth/accounts/:id/label', requireGoogleAuth, validate(updateLabelSc
     });
     res.json({ success: true });
   } catch (error) {
-    console.error('Failed to update account label:', error);
+    logger.error({ err: error }, 'Failed to update account label:');
     res.status(500).json({ error: 'Failed to update account label' });
   }
 });
@@ -135,7 +136,7 @@ router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Reque
     const url = getAuthUrl(account.label || account.email);
     res.json({ url, accountId });
   } catch (error) {
-    console.error('Failed to generate reconnect URL:', error);
+    logger.error({ err: error }, 'Failed to generate reconnect URL:');
     res.status(500).json({ error: 'Failed to generate reconnect URL' });
   }
 });
@@ -170,7 +171,7 @@ router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, 
 
     res.json({ id: accountId, email, label: account.label, isDefault: account.isDefault, needsReconnect });
   } catch (error) {
-    console.error('Failed to check account status:', error);
+    logger.error({ err: error }, 'Failed to check account status:');
     res.status(500).json({ error: 'Failed to check account status' });
   }
 });

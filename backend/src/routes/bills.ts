@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Router } from 'express';
 import { requireGoogleAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
@@ -48,12 +49,12 @@ async function processGmailAttachment(
     try {
       extraction = await extractBillData(pdfResult.text);
       if (!extraction || extraction.vendor === 'Unknown') {
-        console.warn('AI first attempt failed (vendor=Unknown), retrying...');
+        logger.warn('AI first attempt failed (vendor=Unknown), retrying...');
         await new Promise(r => setTimeout(r, 2000));
         extraction = await extractBillData(pdfResult.text);
       }
     } catch (err) {
-      console.warn('AI extraction error:', err instanceof Error ? err.message : err);
+      logger.warn({ err }, 'AI extraction error');
     }
   }
 
@@ -89,7 +90,7 @@ router.get('/', async (req, res) => {
     });
     res.json(bills);
   } catch (err) {
-    console.error('Failed to fetch bills:', err);
+    logger.error({ err: err }, 'Failed to fetch bills:');
     res.status(500).json({ error: 'Failed to fetch bills' });
   }
 });
@@ -105,7 +106,7 @@ router.get('/:id', async (req, res) => {
     }
     res.json(bill);
   } catch (err) {
-    console.error('Failed to fetch bill:', err);
+    logger.error({ err: err }, 'Failed to fetch bill:');
     res.status(500).json({ error: 'Failed to fetch bill' });
   }
 });
@@ -134,7 +135,7 @@ router.put('/:id', validate(updateBillSchema), async (req, res) => {
     });
     res.json(bill);
   } catch (err) {
-    console.error('Failed to update bill:', err);
+    logger.error({ err: err }, 'Failed to update bill:');
     res.status(500).json({ error: 'Failed to update bill' });
   }
 });
@@ -157,7 +158,7 @@ router.delete('/:id', async (req, res) => {
     await prisma.bill.delete({ where: { id: String(req.params.id) } });
     res.status(204).end();
   } catch (err) {
-    console.error('Failed to delete bill:', err);
+    logger.error({ err: err }, 'Failed to delete bill:');
     res.status(500).json({ error: 'Failed to delete bill' });
   }
 });
@@ -181,7 +182,7 @@ router.post('/fetch-gmail', requireGoogleAuth, validate(fetchGmailSchema), async
 
     res.json({ fetched: bills.length, bills });
   } catch (err) {
-    console.error('Failed to fetch bills from Gmail:', err);
+    logger.error({ err: err }, 'Failed to fetch bills from Gmail:');
     res.status(500).json({ error: 'Failed to fetch bills' });
   }
 });
@@ -212,14 +213,14 @@ router.post('/fetch-gmail-all', requireGoogleAuth, async (req, res) => {
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
-        console.error(`Failed to fetch Gmail bills for account ${account.email}:`, message);
+        logger.error({ err: message }, `Failed to fetch Gmail bills for account ${account.email}:`);
         errors.push({ email: account.email, error: message });
       }
     }
 
     res.json({ fetched: results.length, bills: results, errors });
   } catch (err) {
-    console.error('Failed to fetch bills from all Gmail accounts:', err);
+    logger.error({ err: err }, 'Failed to fetch bills from all Gmail accounts:');
     res.status(500).json({ error: 'Failed to fetch bills from all accounts' });
   }
 });
@@ -231,7 +232,7 @@ router.post('/parse', requireGoogleAuth, validate(parseBillSchema), async (req, 
     const extraction = await extractBillData(rawText);
     res.json(extraction);
   } catch (err) {
-    console.error('Failed to parse bill:', err);
+    logger.error({ err: err }, 'Failed to parse bill:');
     res.status(500).json({ error: 'Failed to parse bill' });
   }
 });
@@ -252,7 +253,7 @@ router.get('/:id/pdf', async (req, res) => {
 
     res.download(pdfPath, bill.pdfUrl);
   } catch (err) {
-    console.error('Failed to serve PDF:', err);
+    logger.error({ err: err }, 'Failed to serve PDF:');
     res.status(500).json({ error: 'Failed to serve PDF' });
   }
 });

@@ -8,6 +8,7 @@ import foldersRoutes from './routes/folders';
 import calendarRoutes from './routes/calendar';
 import billsRoutes from './routes/bills';
 import { errorHandler, notFound } from './middleware/error-handler';
+import { logger } from './lib/logger';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -40,7 +41,7 @@ app.get('*', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  logger.info(`Server running on port ${port}`);
 });
 
 export default app;

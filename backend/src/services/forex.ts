@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 const LOCAL_CURRENCY = 'EUR';
 
 let ratesCache: { rates: Record<string, number>; timestamp: number } | null = null;
@@ -18,7 +19,7 @@ export async function convertToLocal(
       localCurrency: LOCAL_CURRENCY,
     };
   } catch (err) {
-    console.warn('Forex conversion failed:', err instanceof Error ? err.message : err);
+    logger.warn({ err }, 'Forex conversion failed');
     return null;
   }
 }
