@@ -105,8 +105,8 @@ function Sidebar() {
             <rect width="40" height="40" rx="8" fill="url(#logo-grad)"/>
             <path d="M12 20l4-4 4 4-4 4-4-4z" fill="#0b1326"/>
             <path d="M20 14l-4 4 4 4 4-4-4-4z" fill="#0b1326" opacity="0.6"/>
-            <text x="52" y="28" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="18" fontWeight="700">personal</text>
-            <text x="122" y="28" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="18" fontWeight="700">manager</text>
+            <text x="52" y="28" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">pers</text>
+            <text x="98" y="28" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">Man</text>
             <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#4d8eff"/><stop offset="1" stop-color="#adc6ff"/></linearGradient></defs>
           </svg>
         </div>
