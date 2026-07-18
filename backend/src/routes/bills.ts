@@ -1,6 +1,6 @@
 import { logger } from '../lib/logger';
 import { Router } from 'express';
-import { requireGoogleAuth } from '../middleware/auth';
+import { requireGoogleAuth, requireOptionalAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { getAuthenticatedClient } from '../services/google-auth';
 import { searchBillEmails, downloadAttachment, GmailBillEmail } from '../services/gmail-bills';
@@ -83,7 +83,7 @@ async function processGmailAttachment(
 
 const router = Router();
 
-router.get('/', requireGoogleAuth, async (req, res) => {
+router.get('/', requireOptionalAuth, async (req, res) => {
   try {
     const bills = await prisma.bill.findMany({
       orderBy: { createdAt: 'desc' },
@@ -95,7 +95,7 @@ router.get('/', requireGoogleAuth, async (req, res) => {
   }
 });
 
-router.get('/:id', requireGoogleAuth, async (req, res) => {
+router.get('/:id', requireOptionalAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({
       where: { id: String(req.params.id) },
@@ -111,7 +111,7 @@ router.get('/:id', requireGoogleAuth, async (req, res) => {
   }
 });
 
-router.put('/:id', requireGoogleAuth, validate(updateBillSchema), async (req, res) => {
+router.put('/:id', requireOptionalAuth, validate(updateBillSchema), async (req, res) => {
   try {
     const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, localAmount, localCurrency, lineItems } =
       req.body;
@@ -140,7 +140,7 @@ router.put('/:id', requireGoogleAuth, validate(updateBillSchema), async (req, re
   }
 });
 
-router.delete('/:id', requireGoogleAuth, async (req, res) => {
+router.delete('/:id', requireOptionalAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
     if (!bill) {
@@ -237,7 +237,7 @@ router.post('/parse', requireGoogleAuth, validate(parseBillSchema), async (req, 
   }
 });
 
-router.get('/:id/pdf', requireGoogleAuth, async (req, res) => {
+router.get('/:id/pdf', requireOptionalAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
     if (!bill || !bill.pdfUrl) {

@@ -1,10 +1,10 @@
 import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { requireGoogleAuth } from '../middleware/auth';
+import { requireOptionalAuth } from '../middleware/auth';
 
 const router = Router();
-router.use(requireGoogleAuth);
+router.use(requireOptionalAuth);
 
 router.get('/folders', async (req: Request, res: Response) => {
   try {

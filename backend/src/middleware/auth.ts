@@ -21,6 +21,18 @@ export async function requireGoogleAuth(req: Request, res: Response, next: NextF
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Authentication check failed';
     logger.error({ err: message }, 'Auth middleware error:');
-    res.status(401).json({ error: message });
+    res.status(401).json({ error: 'Authentication required' });
   }
+}
+
+export async function requireOptionalAuth(req: Request, res: Response, next: NextFunction) {
+  try {
+    const defaultAccount = await getDefaultAccount();
+    if (defaultAccount) {
+      req.googleAccount = defaultAccount;
+    }
+  } catch {
+    // No account — that's fine for local CRUD
+  }
+  next();
 }

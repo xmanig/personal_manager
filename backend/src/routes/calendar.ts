@@ -1,7 +1,7 @@
 import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { requireGoogleAuth } from '../middleware/auth';
+import { requireGoogleAuth, requireOptionalAuth } from '../middleware/auth';
 import { validate, createEventSchema, updateEventSchema } from '../lib/validation';
 
 const router = Router();
@@ -83,7 +83,7 @@ router.get('/calendar/events', requireGoogleAuth, async (req: Request, res: Resp
   }
 });
 
-router.get('/calendar/events/local', requireGoogleAuth, async (req: Request, res: Response) => {
+router.get('/calendar/events/local', requireOptionalAuth, async (req: Request, res: Response) => {
   try {
     const from = req.query.from ? new Date(String(req.query.from)) : new Date();
     const to = req.query.to
