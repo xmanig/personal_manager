@@ -7,6 +7,7 @@ import tagsRoutes from './routes/tags';
 import foldersRoutes from './routes/folders';
 import calendarRoutes from './routes/calendar';
 import billsRoutes from './routes/bills';
+import { errorHandler, notFound } from './middleware/error-handler';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -30,7 +31,11 @@ app.use('/api/bills', billsRoutes);
 
 const frontendDist = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDist));
-app.get('/{*path}', (req, res) => {
+
+app.use('/api', notFound);
+app.use('/api', errorHandler);
+
+app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
