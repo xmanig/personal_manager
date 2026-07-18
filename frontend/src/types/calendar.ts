@@ -11,6 +11,7 @@ export interface CalendarEvent {
   lastLocalEdit: string | null;
   lastGoogleEdit: string | null;
   syncedAt: string;
+  googleAccountId: string | null;
   createdAt: string;
   updatedAt: string;
 }

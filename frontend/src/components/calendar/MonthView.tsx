@@ -6,9 +6,11 @@ import { Button } from '../ui/Button';
 interface MonthViewProps {
   onSelectEvent: (event: CalendarEvent) => void;
   onSelectDate: (date: Date) => void;
+  accountId?: string;
+  getAccountColor?: (event: CalendarEvent) => string;
 }
 
-export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
+export function MonthView({ onSelectEvent, onSelectDate, accountId, getAccountColor }: MonthViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,14 +20,14 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
       setLoading(true);
       const from = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const to = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
-      const response = await fetchCalendarEvents(from, to);
+      const response = await fetchCalendarEvents(from, to, accountId);
       setEvents(response.events);
     } catch (err) {
       console.error('Failed to load events:', err);
     } finally {
       setLoading(false);
     }
-  }, [currentDate]);
+  }, [currentDate, accountId]);
 
   useEffect(() => {
     loadEvents();
@@ -119,7 +121,9 @@ export function MonthView({ onSelectEvent, onSelectDate }: MonthViewProps) {
                       <div
                         key={event.id}
                         onClick={(e) => { e.stopPropagation(); onSelectEvent(event); }}
-                        className="cursor-pointer truncate rounded-md bg-primary-100 px-1.5 py-0.5 text-[11px] font-medium text-primary-700 transition-colors hover:bg-primary-200 dark:bg-primary-900/50 dark:text-primary-300 dark:hover:bg-primary-800/50"
+                        className={`cursor-pointer truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium text-white transition-colors ${
+                          getAccountColor ? getAccountColor(event) : 'bg-primary-500'
+                        }`}
                       >
                         {event.title}
                       </div>

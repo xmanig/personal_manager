@@ -1,11 +1,25 @@
 import { Router, Request, Response } from 'express';
-import { getAuthUrl, getTokensFromCode, saveTokens, getUserEmail } from '../services/google-auth';
+import { google } from 'googleapis';
+import {
+  getAuthUrl,
+  getTokensFromCode,
+  saveAccount,
+  getUserEmail,
+  listAccounts,
+  deleteAccount,
+  setDefaultAccount,
+  getDefaultAccount,
+  createOAuth2Client,
+} from '../services/google-auth';
+import { requireGoogleAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
+import { decrypt } from '../lib/encryption';
 
 const router = Router();
 
 router.get('/auth/google', (req: Request, res: Response) => {
-  const url = getAuthUrl();
+  const state = req.query.state as string | undefined;
+  const url = getAuthUrl(state);
   res.redirect(url);
 });
 
@@ -19,9 +33,15 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
 
   try {
     const tokens = await getTokensFromCode(code);
-    await saveTokens(tokens);
 
-    const email = await getUserEmail();
+    const client = createOAuth2Client();
+    client.setCredentials(tokens);
+    const oauth2 = google.oauth2({ version: 'v2', auth: client });
+    const { data } = await oauth2.userinfo.get();
+    const email = data.email || '';
+
+    const label = (req.query.state as string) || null;
+    await saveAccount(email, tokens, label || undefined);
 
     res.json({
       success: true,
@@ -36,8 +56,12 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
 
 router.get('/auth/status', async (req: Request, res: Response) => {
   try {
-    const email = await getUserEmail();
-    res.json({ connected: true, email });
+    const defaultAccount = await getDefaultAccount();
+    if (!defaultAccount) {
+      res.json({ connected: false });
+      return;
+    }
+    res.json({ connected: true, email: defaultAccount.email });
   } catch {
     res.json({ connected: false });
   }
@@ -45,12 +69,108 @@ router.get('/auth/status', async (req: Request, res: Response) => {
 
 router.post('/auth/disconnect', async (req: Request, res: Response) => {
   try {
-    await prisma.userSetting.deleteMany({
-      where: { key: { in: ['google_access_token', 'google_refresh_token', 'google_token_expiry'] } },
-    });
+    const defaultAccount = await getDefaultAccount();
+    if (defaultAccount) {
+      await deleteAccount(defaultAccount.id);
+    }
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Failed to disconnect' });
+  }
+});
+
+router.get('/auth/accounts', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const accounts = await listAccounts();
+    res.json({ accounts });
+  } catch (error) {
+    console.error('Failed to list accounts:', error);
+    res.status(500).json({ error: 'Failed to list accounts' });
+  }
+});
+
+router.delete('/auth/accounts/:id', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    await deleteAccount(String(req.params.id));
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete account:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
+router.put('/auth/accounts/:id/default', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    await setDefaultAccount(String(req.params.id));
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to set default account:', error);
+    res.status(500).json({ error: 'Failed to set default account' });
+  }
+});
+
+router.put('/auth/accounts/:id/label', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const { label } = req.body;
+    await prisma.googleAccount.update({
+      where: { id: String(req.params.id) },
+      data: { label },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to update account label:', error);
+    res.status(500).json({ error: 'Failed to update account label' });
+  }
+});
+
+router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const accountId = String(req.params.id);
+    const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+    const url = getAuthUrl(account.label || account.email);
+    res.json({ url, accountId });
+  } catch (error) {
+    console.error('Failed to generate reconnect URL:', error);
+    res.status(500).json({ error: 'Failed to generate reconnect URL' });
+  }
+});
+
+router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, res: Response) => {
+  try {
+    const accountId = String(req.params.id);
+    const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+
+    const needsReconnect = account.tokenExpiry.getTime() < Date.now();
+
+    let email = account.email;
+    if (!needsReconnect) {
+      try {
+        const client = createOAuth2Client();
+        client.setCredentials({
+          access_token: decrypt(account.accessToken),
+          refresh_token: decrypt(account.refreshToken),
+        });
+        const oauth2 = google.oauth2({ version: 'v2', auth: client });
+        const { data } = await oauth2.userinfo.get();
+        if (data.email) email = data.email;
+      } catch {
+        res.json({ id: accountId, email: account.email, needsReconnect: true });
+        return;
+      }
+    }
+
+    res.json({ id: accountId, email, label: account.label, isDefault: account.isDefault, needsReconnect });
+  } catch (error) {
+    console.error('Failed to check account status:', error);
+    res.status(500).json({ error: 'Failed to check account status' });
   }
 });
 

@@ -1,34 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
-import { getStoredTokens, saveTokens, createOAuth2Client } from '../services/google-auth';
+import { getAuthenticatedClient, getDefaultAccount, loadAccount } from '../services/google-auth';
 
 export async function requireGoogleAuth(req: Request, res: Response, next: NextFunction) {
   try {
-    const tokens = await getStoredTokens();
+    const accountId = req.headers['x-google-account-id'] as string | undefined;
 
-    if (!tokens) {
-      res.status(401).json({ error: 'Google account not connected. Please authenticate first.' });
-      return;
+    const client = await getAuthenticatedClient(accountId);
+
+    let account;
+    if (accountId) {
+      account = await loadAccount(accountId);
+    } else {
+      account = await getDefaultAccount();
     }
 
-    const oauth2Client = createOAuth2Client();
-    oauth2Client.setCredentials(tokens);
-
-    if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
-      try {
-        const { credentials } = await oauth2Client.refreshAccessToken();
-        await saveTokens(credentials);
-        oauth2Client.setCredentials(credentials);
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        res.status(401).json({ error: 'Failed to refresh Google tokens. Please re-authenticate.' });
-        return;
-      }
-    }
-
-    (req as any).googleAuth = oauth2Client;
+    (req as any).googleAuth = client;
+    (req as any).googleAccount = account;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    res.status(500).json({ error: 'Authentication check failed' });
+    const message = error instanceof Error ? error.message : 'Authentication check failed';
+    console.error('Auth middleware error:', message);
+    res.status(401).json({ error: message });
   }
 }

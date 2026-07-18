@@ -6,9 +6,10 @@ interface EventFormProps {
   initialDate?: Date;
   onClose: () => void;
   onEventCreated: () => void;
+  accountId?: string;
 }
 
-export function EventForm({ initialDate, onClose, onEventCreated }: EventFormProps) {
+export function EventForm({ initialDate, onClose, onEventCreated, accountId }: EventFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -39,7 +40,8 @@ export function EventForm({ initialDate, onClose, onEventCreated }: EventFormPro
         startTime: new Date(startTime).toISOString(),
         endTime: new Date(endTime).toISOString(),
         isAllDay,
-      });
+        googleAccountId: accountId,
+      }, accountId);
       onEventCreated();
       onClose();
     } catch (err) {

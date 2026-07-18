@@ -8,8 +8,20 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { CalendarEvent } from '../types/calendar';
 import { fetchCalendarEvents, deleteCalendarEvent } from '../lib/calendar-api';
+import { listAccounts, GoogleAccount } from '../lib/auth';
 
 type ViewMode = 'month' | 'week' | 'day';
+
+const ACCOUNT_COLORS = [
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-violet-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+  'bg-orange-500',
+  'bg-teal-500',
+];
 
 export function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
@@ -20,12 +32,23 @@ export function CalendarPage() {
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [accounts, setAccounts] = useState<GoogleAccount[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+  const [accountColorMap, setAccountColorMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    listAccounts().then((accs) => {
+      setAccounts(accs);
+      const map: Record<string, string> = {};
+      accs.forEach((acc, i) => {
+        map[acc.id] = ACCOUNT_COLORS[i % ACCOUNT_COLORS.length];
+      });
+      setAccountColorMap(map);
+    });
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -40,7 +63,7 @@ export function CalendarPage() {
       from.setMonth(from.getMonth() - 1);
       const to = new Date();
       to.setMonth(to.getMonth() + 1);
-      await fetchCalendarEvents(from, to);
+      await fetchCalendarEvents(from, to, selectedAccountId || undefined);
       setLastSynced(new Date());
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -48,17 +71,28 @@ export function CalendarPage() {
     } finally {
       setSyncing(false);
     }
-  }, [isOnline]);
+  }, [isOnline, selectedAccountId]);
 
   const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
     try {
-      await deleteCalendarEvent(selectedEvent.id);
+      await deleteCalendarEvent(selectedEvent.id, selectedEvent.googleAccountId || undefined);
       setSelectedEvent(null);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error('Failed to delete event:', err);
     }
+  };
+
+  const getAccountColor = (event: CalendarEvent) => {
+    if (!event.googleAccountId) return 'bg-primary-500';
+    return accountColorMap[event.googleAccountId] || 'bg-primary-500';
+  };
+
+  const getAccountLabel = (event: CalendarEvent) => {
+    if (!event.googleAccountId) return null;
+    const acc = accounts.find((a) => a.id === event.googleAccountId);
+    return acc ? (acc.label || acc.email) : null;
   };
 
   const views: { key: ViewMode; label: string }[] = [
@@ -90,6 +124,33 @@ export function CalendarPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {accounts.length > 1 && (
+            <select
+              value={selectedAccountId}
+              onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50"
+            >
+              <option value="">All Accounts</option>
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.label || acc.email}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Account color legend */}
+          {accounts.length > 1 && !selectedAccountId && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              {accounts.map((acc) => (
+                <div key={acc.id} className="flex items-center gap-1">
+                  <div className={`h-2.5 w-2.5 rounded-full ${accountColorMap[acc.id] || 'bg-primary-500'}`} />
+                  <span>{acc.label || acc.email.split('@')[0]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
             <div className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
             {isOnline ? 'Online' : 'Offline'}
@@ -119,10 +180,24 @@ export function CalendarPage() {
           <MonthView
             onSelectEvent={setSelectedEvent}
             onSelectDate={(date) => { setSelectedDate(date); setShowEventForm(true); }}
+            accountId={selectedAccountId || undefined}
+            getAccountColor={getAccountColor}
           />
         )}
-        {viewMode === 'week' && <WeekView onSelectEvent={setSelectedEvent} />}
-        {viewMode === 'day' && <DayView onSelectEvent={setSelectedEvent} />}
+        {viewMode === 'week' && (
+          <WeekView
+            onSelectEvent={setSelectedEvent}
+            accountId={selectedAccountId || undefined}
+            getAccountColor={getAccountColor}
+          />
+        )}
+        {viewMode === 'day' && (
+          <DayView
+            onSelectEvent={setSelectedEvent}
+            accountId={selectedAccountId || undefined}
+            getAccountColor={getAccountColor}
+          />
+        )}
       </div>
 
       <Modal isOpen={!!selectedEvent} onClose={() => setSelectedEvent(null)} title={selectedEvent?.title}>
@@ -148,6 +223,12 @@ export function CalendarPage() {
                 <p className="mt-2 text-gray-500 dark:text-gray-400">{selectedEvent.description}</p>
               )}
               {selectedEvent.isAllDay && <Badge variant="primary">All day</Badge>}
+              {getAccountLabel(selectedEvent) && (
+                <div className="flex items-center gap-2 pt-1">
+                  <div className={`h-2.5 w-2.5 rounded-full ${getAccountColor(selectedEvent)}`} />
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{getAccountLabel(selectedEvent)}</span>
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="danger" size="sm" onClick={handleDeleteEvent}>Delete</Button>
@@ -162,6 +243,7 @@ export function CalendarPage() {
           initialDate={selectedDate}
           onClose={() => { setShowEventForm(false); setSelectedDate(undefined); }}
           onEventCreated={() => setRefreshKey((k) => k + 1)}
+          accountId={selectedAccountId || undefined}
         />
       )}
     </div>

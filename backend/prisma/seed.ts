@@ -1,4 +1,6 @@
 import { PrismaClient } from './src/generated/prisma';
+import { encrypt } from '../src/lib/encryption';
+import { SCOPES } from '../src/services/google-auth';
 
 const prisma = new PrismaClient();
 
@@ -78,22 +80,40 @@ async function main() {
     },
   });
 
-  // Create user settings
+  // Create sample GoogleAccount
+  const demoAccount = await prisma.googleAccount.create({
+    data: {
+      email: 'demo@example.com',
+      label: 'Personal',
+      accessToken: encrypt('demo-access-token'),
+      refreshToken: encrypt('demo-refresh-token'),
+      tokenExpiry: new Date(Date.now() + 3600 * 1000),
+      scopes: SCOPES,
+      isDefault: true,
+      filterRules: {
+        senderContains: ['billing', 'invoice'],
+        subjectContains: ['bill', 'invoice', 'payment'],
+        hasAttachment: true,
+      },
+    },
+  });
+
+  // Tag sample bills/events with the demo account
+  await prisma.bill.updateMany({
+    where: { googleAccountId: null },
+    data: { googleAccountId: demoAccount.id },
+  });
+
+  await prisma.calendarEvent.updateMany({
+    where: { googleAccountId: null },
+    data: { googleAccountId: demoAccount.id },
+  });
+
+  // Legacy user settings (non-token)
   await prisma.userSetting.create({
     data: {
       key: 'google_drive_folder_id',
       value: '',
-    },
-  });
-
-  await prisma.userSetting.create({
-    data: {
-      key: 'gmail_filter_rules',
-      value: JSON.stringify({
-        senderContains: ['billing', 'invoice'],
-        subjectContains: ['bill', 'invoice', 'payment'],
-        hasAttachment: true,
-      }),
     },
   });
 

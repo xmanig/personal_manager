@@ -32,18 +32,42 @@ export async function deleteBill(id: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete bill');
 }
 
-export async function fetchBillsFromGmail(rules: {
-  senderContains?: string;
-  subjectContains?: string;
-  hasAttachment?: boolean;
-  dateRange?: { from?: string; to?: string };
-}): Promise<{ fetched: number; bills: Bill[] }> {
+export async function fetchBillsFromGmail(
+  rules: {
+    senderContains?: string;
+    subjectContains?: string;
+    hasAttachment?: boolean;
+    dateRange?: { from?: string; to?: string };
+  },
+  googleAccountId?: string
+): Promise<{ fetched: number; bills: Bill[] }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (googleAccountId) {
+    headers['X-Google-Account-Id'] = googleAccountId;
+  }
   const res = await fetch(`${API_BASE}/fetch-gmail`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ rules, googleAccountId }),
+  });
+  if (!res.ok) throw new Error('Failed to fetch bills from Gmail');
+  return res.json();
+}
+
+export async function fetchBillsFromAllAccounts(
+  rules: {
+    senderContains?: string;
+    subjectContains?: string;
+    hasAttachment?: boolean;
+    dateRange?: { from?: string; to?: string };
+  }
+): Promise<{ fetched: number; bills: Bill[]; errors?: { email: string; error: string }[] }> {
+  const res = await fetch(`${API_BASE}/fetch-gmail-all`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rules }),
   });
-  if (!res.ok) throw new Error('Failed to fetch bills from Gmail');
+  if (!res.ok) throw new Error('Failed to fetch bills from all accounts');
   return res.json();
 }
 
