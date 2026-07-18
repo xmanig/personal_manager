@@ -36,7 +36,7 @@ app.use(express.static(frontendDist));
 app.use('/api', notFound);
 app.use('/api', errorHandler);
 
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 

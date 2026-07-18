@@ -3,82 +3,123 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  --font-body-lg: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-lg: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body-md: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-md: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-sm: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-label-md: "JetBrains Mono", ui-monospace, monospace;
+  --font-numeric-data: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-surface: #0b1326;
+  --color-surface-dim: #0b1326;
+  --color-surface-bright: #31394d;
+  --color-surface-container-lowest: #060e20;
+  --color-surface-container-low: #131b2e;
+  --color-surface-container: #171f33;
+  --color-surface-container-high: #222a3d;
+  --color-surface-container-highest: #2d3449;
+  --color-surface-variant: #2d3449;
+  --color-on-surface: #dae2fd;
+  --color-on-surface-variant: #c2c6d6;
+  --color-on-background: #dae2fd;
+
+  --color-primary: #adc6ff;
+  --color-on-primary: #002e6a;
+  --color-primary-container: #4d8eff;
+  --color-on-primary-container: #00285d;
+  --color-primary-fixed: #d8e2ff;
+  --color-primary-fixed-dim: #adc6ff;
+  --color-on-primary-fixed: #001a42;
+  --color-on-primary-fixed-variant: #004395;
+
+  --color-secondary: #4edea3;
+  --color-on-secondary: #003824;
+  --color-secondary-container: #00a572;
+  --color-on-secondary-container: #00311f;
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+
+  --color-tertiary: #ffb95f;
+  --color-on-tertiary: #472a00;
+  --color-tertiary-container: #ca8100;
+  --color-on-tertiary-container: #3e2400;
+  --color-tertiary-fixed: #ffddb8;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #653e00;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --color-outline: #8c909f;
+  --color-outline-variant: #424754;
+  --color-surface-tint: #adc6ff;
+
+  --color-background: #0b1326;
+
+  --radius-default: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  --text-headline-lg: 32px;
+  --text-headline-md: 24px;
+  --text-headline-sm: 20px;
+  --text-body-lg: 16px;
+  --text-body-md: 14px;
+  --text-label-md: 12px;
+  --text-numeric-data: 14px;
 }
 
 html, body, #root {
-  @apply h-full font-sans antialiased;
-}
-
-html {
+  @apply h-full font-body-md text-body-md antialiased bg-surface text-on-surface;
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+body {
+  overflow: hidden;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: var(--color-surface);
 }
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-gray-300 dark:bg-gray-600;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-500;
+  background: var(--color-surface-container-highest);
+  border-radius: 10px;
 }
 
-*:focus-visible {
-  @apply outline-2 outline-offset-2 outline-primary-500;
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.5);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  @apply bg-gray-600;
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
-}
-
-/* Markdown prose styles */
-.prose h1 { @apply text-2xl font-bold mb-4 mt-6; }
-.prose h2 { @apply text-xl font-semibold mb-3 mt-5; }
-.prose h3 { @apply text-lg font-semibold mb-2 mt-4; }
-.prose p { @apply mb-3 leading-relaxed; }
-.prose ul { @apply list-disc pl-6 mb-3; }
-.prose ol { @apply list-decimal pl-6 mb-3; }
-.prose li { @apply mb-1; }
-.prose code { @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono; }
-.prose pre { @apply bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto; }
-.prose pre code { @apply bg-transparent p-0 text-inherit; }
-.prose blockquote { @apply border-l-4 border-primary-300 pl-4 italic text-gray-600 mb-3; }
-.prose a { @apply text-primary-600 underline hover:text-primary-700; }
-.prose table { @apply w-full border-collapse mb-3; }
-.prose th, .prose td { @apply border border-gray-200 px-3 py-2 text-left; }
-.prose th { @apply bg-gray-50 font-medium; }
-.prose hr { @apply border-gray-200 my-6; }
-.prose img { @apply max-w-full rounded-lg; }
-
-/* Dark mode prose overrides */
-.dark .prose h1,
-.dark .prose h2,
-.dark .prose h3 { @apply text-white; }
-.dark .prose p,
-.dark .prose li { @apply text-gray-300; }
-.dark .prose code { @apply bg-gray-800 text-gray-200; }
-.dark .prose blockquote { @apply text-gray-400; }
-.dark .prose th,
-.dark .prose td { @apply border-gray-700; }
-.dark .prose th { @apply bg-gray-800 text-gray-300; }
-.dark .prose hr { @apply border-gray-700; }
+.markdown h1 { @apply font-headline-lg text-headline-lg font-bold mb-4 mt-6 text-on-surface; }
+.markdown h2 { @apply font-headline-md text-headline-md font-semibold mb-3 mt-5 text-on-surface; }
+.markdown h3 { @apply font-headline-sm text-headline-sm font-semibold mb-2 mt-4 text-on-surface; }
+.markdown p { @apply mb-3 leading-relaxed text-on-surface-variant; }
+.markdown ul { @apply list-disc pl-6 mb-3 text-on-surface-variant; }
+.markdown ol { @apply list-decimal pl-6 mb-3 text-on-surface-variant; }
+.markdown li { @apply mb-1; }
+.markdown code { @apply bg-surface-container-high px-1.5 py-0.5 rounded text-sm font-numeric-data text-primary; }
+.markdown pre { @apply bg-surface-container-high p-4 rounded-xl mb-4 overflow-x-auto border border-outline-variant/30; }
+.markdown pre code { @apply bg-transparent p-0 text-inherit; }
+.markdown blockquote { @apply border-l-4 border-primary/30 pl-4 italic text-on-surface-variant mb-3; }
+.markdown a { @apply text-primary underline hover:text-primary-container; }
+.markdown hr { @apply border-outline-variant/30 my-6; }
+.markdown img { @apply max-w-full rounded-xl; }

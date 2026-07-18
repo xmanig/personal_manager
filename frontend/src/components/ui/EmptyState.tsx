@@ -9,12 +9,12 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {icon && (
-        <div className="mb-4 rounded-2xl bg-gray-100 p-4 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+        <div className="mb-4 rounded-2xl bg-surface-container-high p-4 text-outline">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200">{title}</h3>
-      {description && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</p>}
+      <h3 className="font-headline-sm text-headline-sm text-on-surface">{title}</h3>
+      {description && <p className="mt-1 text-sm text-on-surface-variant">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

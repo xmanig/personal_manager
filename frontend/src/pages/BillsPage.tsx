@@ -4,11 +4,22 @@ import { fetchBills, updateBill, deleteBill, fetchBillsFromGmail, fetchBillsFrom
 import { listAccounts, GoogleAccount } from '../lib/auth';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
-import { BillRow } from '../components/bills/BillRow';
 import { BillEditForm } from '../components/bills/BillEditForm';
 
 const API_BASE = 'http://localhost:3001';
+
+const statusBadge = (status: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' => {
+  const map: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
+    paid: 'success', pending: 'warning', overdue: 'danger', cancelled: 'default',
+  };
+  return map[status] || 'default';
+};
+
+const directionBadge = (direction: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' => {
+  return direction === 'receivable' ? 'success' : 'danger';
+};
 
 export function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -20,6 +31,7 @@ export function BillsPage() {
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [sortKey, setSortKey] = useState<string>('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadBills();
@@ -37,22 +49,13 @@ export function BillsPage() {
     }
   };
 
-  const getAccountEmail = (id: string | null) => {
-    if (!id) return '';
-    const acc = accounts.find((a) => a.id === id);
-    return acc ? (acc.label || acc.email) : '';
-  };
-
   const handleFetchFromGmail = async () => {
     setFetching(true);
     try {
       if (selectedAccountId === '__all__') {
         await fetchBillsFromAllAccounts({ hasAttachment: true });
       } else {
-        await fetchBillsFromGmail(
-          { hasAttachment: true },
-          selectedAccountId || undefined
-        );
+        await fetchBillsFromGmail({ hasAttachment: true }, selectedAccountId || undefined);
       }
       await loadBills();
     } catch (err) {
@@ -72,21 +75,15 @@ export function BillsPage() {
     await loadBills();
   };
 
-  const handleMarkAllPaid = async (bills: Bill[]) => {
-    const pending = bills.filter((b) => b.status === 'pending');
-    for (const bill of pending) {
-      await updateBill(bill.id, { status: 'paid', paidDate: new Date().toISOString() });
-    }
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this bill?')) return;
+    await deleteBill(id);
     await loadBills();
   };
 
   const handleSort = (key: string) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortDir('asc');
-    }
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('asc'); }
   };
 
   const sortFn = (a: Bill, b: Bill): number => {
@@ -107,34 +104,14 @@ export function BillsPage() {
     return 0;
   };
 
-  const SortHeader = ({ label, sortable, className }: { label: string; sortable: string; className?: string }) => (
-    <button
-      onClick={() => handleSort(sortable)}
-      className={`group flex items-center gap-1 ${className || ''} ${sortKey === sortable ? 'text-gray-900 dark:text-gray-200' : ''}`}
-    >
-      {label}
-      {sortKey === sortable ? (
-        <svg className={`h-3 w-3 transition-transform ${sortDir === 'desc' ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      ) : (
-        <svg className="h-3 w-3 opacity-0 group-hover:opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7l5-5 5 5M7 17l5 5 5-5" />
-        </svg>
-      )}
-    </button>
-  );
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this bill?')) return;
-    await deleteBill(id);
-    await loadBills();
-  };
-
   const filteredBills = bills.filter((bill) => {
     if (filter.category && bill.category !== filter.category) return false;
     if (filter.status && bill.status !== filter.status) return false;
     if (filter.direction && bill.direction !== filter.direction) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!bill.vendor?.toLowerCase().includes(q) && !bill.invoiceNumber?.toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
@@ -142,152 +119,242 @@ export function BillsPage() {
   const receivablePending = filteredBills.filter((b) => b.direction === 'receivable' && b.status === 'pending').reduce((sum, b) => sum + b.amount, 0);
   const totalPaid = filteredBills.filter((b) => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
 
-  const statusBadge = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'default'> = { paid: 'success', pending: 'warning', overdue: 'danger', cancelled: 'default' };
-    return map[status] || 'default';
-  };
-
-  const directionBadge = (direction: string): 'success' | 'warning' | 'danger' | 'default' => {
-    return direction === 'receivable' ? 'success' : 'danger';
-  };
+  const SortHeader = ({ label, sortable }: { label: string; sortable: string }) => (
+    <button onClick={() => handleSort(sortable)}
+      className={`group flex items-center gap-1 font-semibold uppercase tracking-wider ${sortKey === sortable ? 'text-on-surface' : 'text-outline'}`}>
+      {label}
+      {sortKey === sortable ? (
+        <span className={`material-symbols-outlined text-[16px] transition-transform ${sortDir === 'desc' ? '' : 'rotate-180'}`}>expand_more</span>
+      ) : (
+        <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-40">unfold_more</span>
+      )}
+    </button>
+  );
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-white dark:bg-gray-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-primary-900 dark:border-t-primary-400" />
+      <div className="flex h-full items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Bills</h1>
-        <div className="flex items-center gap-2">
+    <div className="flex h-full flex-col bg-surface">
+      {/* Top App Bar */}
+      <header className="flex justify-between items-center h-16 px-8 bg-surface border-b border-outline-variant sticky top-0 z-40">
+        <div className="flex items-center gap-4">
+          <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Bills</h2>
+          <div className="h-6 w-[1px] bg-outline-variant" />
+          <div className="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-[12px] font-medium text-on-surface-variant border border-outline-variant/30">
+            <span className="w-2 h-2 rounded-full bg-secondary" />
+            <span>Live Sync</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
           {accounts.length > 1 && (
-            <select
-              value={selectedAccountId}
-              onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50"
-            >
+            <select value={selectedAccountId} onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface-variant focus:border-primary focus:ring-0">
               <option value="">Default account</option>
               <option value="__all__">All Accounts</option>
               {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.label || acc.email}
-                </option>
+                <option key={acc.id} value={acc.id}>{acc.label || acc.email}</option>
               ))}
             </select>
           )}
+          <div className="flex items-center bg-surface-container rounded-lg px-3 py-2 border border-outline-variant/50 focus-within:border-primary transition-all">
+            <span className="material-symbols-outlined text-outline text-[20px] mr-2">search</span>
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+              className="bg-transparent border-none focus:ring-0 text-sm p-0 w-48 text-on-surface placeholder:text-outline-variant" placeholder="Search bills..." type="text" />
+          </div>
           <Button size="sm" onClick={handleFetchFromGmail} loading={fetching}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <span className="material-symbols-outlined text-[18px]">gmail_groups</span>
             {fetching ? 'Fetching...' : 'Fetch from Gmail'}
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-        <div className="flex-1 rounded-xl bg-amber-50 p-4 dark:bg-amber-900/20">
-          <div className="text-xs font-medium text-amber-700 dark:text-amber-400">To Pay</div>
-          <div className="mt-1 text-2xl font-bold text-amber-900 dark:text-amber-200">${payablePending.toFixed(2)}</div>
-        </div>
-        <div className="flex-1 rounded-xl bg-emerald-50 p-4 dark:bg-emerald-900/20">
-          <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400">To Receive</div>
-          <div className="mt-1 text-2xl font-bold text-emerald-900 dark:text-emerald-200">${receivablePending.toFixed(2)}</div>
-        </div>
-        <div className="flex-1 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
-          <div className="text-xs font-medium text-blue-700 dark:text-blue-400">Paid</div>
-          <div className="mt-1 text-2xl font-bold text-blue-900 dark:text-blue-200">${totalPaid.toFixed(2)}</div>
-        </div>
-      </div>
-
-      <div className="flex gap-2 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
-        <select value={filter.category || ''} onChange={(e) => setFilter({ ...filter, category: e.target.value || undefined })}
-          className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50">
-          <option value="">All categories</option>
-          {BILL_CATEGORIES.map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
-        </select>
-        <select value={filter.status || ''} onChange={(e) => setFilter({ ...filter, status: e.target.value || undefined })}
-          className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50">
-          <option value="">All statuses</option>
-          {BILL_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
-        </select>
-        <select value={filter.direction || ''} onChange={(e) => setFilter({ ...filter, direction: e.target.value || undefined })}
-          className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50">
-          <option value="">All directions</option>
-          {BILL_DIRECTIONS.map((d) => (<option key={d} value={d}>{d === 'payable' ? 'To Pay' : 'To Receive'}</option>))}
-        </select>
-      </div>
-
-      <div className="flex-1 overflow-auto">
-        {filteredBills.length === 0 ? (
-          <EmptyState
-            icon={<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>}
-            title="No bills found" description="Fetch bills from Gmail or add them manually"
-            action={<Button size="sm" onClick={handleFetchFromGmail}>Fetch from Gmail</Button>} />
-        ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            <div className="flex items-center gap-4 bg-gray-50/50 px-5 py-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-              <div className="w-[10%]"><SortHeader label="Vendor" sortable="vendor" /></div>
-              <div className="w-[10%]"><SortHeader label="Invoice #" sortable="invoiceNumber" /></div>
-              <div className="w-[8%] text-right"><SortHeader label="Amount" sortable="amount" className="ml-auto" /></div>
-              <div className="w-[9%]"><SortHeader label="Due Date" sortable="dueDate" /></div>
-              <div className="w-[9%]"><SortHeader label="Received" sortable="createdAt" /></div>
-              <div className="w-[8%]"><SortHeader label="Category" sortable="category" /></div>
-              <div className="w-[8%]"><SortHeader label="Direction" sortable="direction" /></div>
-              <div className="w-[8%]"><SortHeader label="Status" sortable="status" /></div>
-              <div className="w-[10%]">Account</div>
-              <div className="flex-1 text-right">Actions</div>
+      <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group"
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary/10 rounded-full blur-3xl group-hover:bg-tertiary/20 transition-all duration-500" />
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-tertiary-container/20 rounded-xl">
+                <span className="material-symbols-outlined text-tertiary text-[28px]">payments</span>
+              </div>
+              <span className="text-label-md font-label-md text-tertiary uppercase">Pending</span>
             </div>
-            {(() => {
-              const groups: Record<string, Bill[]> = {};
-              const sorted = [...filteredBills].sort(sortFn);
-              for (const bill of sorted) {
-                const d = new Date(bill.createdAt);
-                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(bill);
-              }
-              return Object.entries(groups).map(([month, bills]) => (
-                <div key={month}>
-                  <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-5 py-2 dark:bg-gray-950">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {new Date(month + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' })}
-                    </span>
-                    {bills.some((b) => b.status === 'pending') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleMarkAllPaid(bills)}
-                      >
-                        <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                        Mark All Paid
-                      </Button>
-                    )}
-                  </div>
-                  {bills.map((bill) => (
-                    <BillRow
-                      key={bill.id}
-                      bill={bill}
-                      onMarkPaid={handleMarkPaid}
-                      onRevokePaid={handleRevokePaid}
-                      onEdit={setEditingBill}
-                      onDelete={handleDelete}
-                      statusBadge={statusBadge}
-                      directionBadge={directionBadge}
-                      accountLabel={getAccountEmail(bill.googleAccountId)}
-                      API_BASE={API_BASE}
-                    />
-                  ))}
-                </div>
-              ));
-            })()}
+            <p className="text-on-surface-variant font-medium mb-1">To Pay</p>
+            <h3 className="font-headline-lg text-headline-lg font-numeric-data text-tertiary">${payablePending.toFixed(2)}</h3>
           </div>
-        )}
+          <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group"
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-primary-container/20 rounded-xl">
+                <span className="material-symbols-outlined text-primary text-[28px]">account_balance</span>
+              </div>
+              <span className="text-label-md font-label-md text-primary uppercase">Expected</span>
+            </div>
+            <p className="text-on-surface-variant font-medium mb-1">To Receive</p>
+            <h3 className="font-headline-lg text-headline-lg font-numeric-data text-primary">${receivablePending.toFixed(2)}</h3>
+          </div>
+          <div className="glass-panel p-6 rounded-2xl border-secondary-container/20 relative overflow-hidden group"
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-all duration-500" />
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-secondary-container/20 rounded-xl">
+                <span className="material-symbols-outlined text-secondary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              </div>
+              <span className="text-label-md font-label-md text-secondary uppercase">Settled</span>
+            </div>
+            <p className="text-on-surface-variant font-medium mb-1">Total Paid</p>
+            <h3 className="font-headline-lg text-headline-lg font-numeric-data text-secondary">${totalPaid.toFixed(2)}</h3>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex gap-2">
+            <div className="relative">
+              <select value={filter.category || ''} onChange={(e) => setFilter({ ...filter, category: e.target.value || undefined })}
+                className="appearance-none bg-surface-container border border-outline-variant rounded-lg pl-4 pr-10 py-2 text-sm text-on-surface-variant focus:border-primary focus:ring-0 cursor-pointer">
+                <option value="">All Categories</option>
+                {BILL_CATEGORIES.map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none">expand_more</span>
+            </div>
+            <div className="relative">
+              <select value={filter.status || ''} onChange={(e) => setFilter({ ...filter, status: e.target.value || undefined })}
+                className="appearance-none bg-surface-container border border-outline-variant rounded-lg pl-4 pr-10 py-2 text-sm text-on-surface-variant focus:border-primary focus:ring-0 cursor-pointer">
+                <option value="">All Statuses</option>
+                {BILL_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none">expand_more</span>
+            </div>
+            <div className="relative">
+              <select value={filter.direction || ''} onChange={(e) => setFilter({ ...filter, direction: e.target.value || undefined })}
+                className="appearance-none bg-surface-container border border-outline-variant rounded-lg pl-4 pr-10 py-2 text-sm text-on-surface-variant focus:border-primary focus:ring-0 cursor-pointer">
+                <option value="">All Directions</option>
+                {BILL_DIRECTIONS.map((d) => (<option key={d} value={d}>{d === 'payable' ? 'To Pay' : 'To Receive'}</option>))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="glass-panel rounded-2xl overflow-hidden border-outline-variant/30">
+          <div className="bg-surface-container-high/50 px-6 py-4 border-b border-outline-variant/30 flex items-center justify-between">
+            <h4 className="font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">event_note</span>
+              Bills
+            </h4>
+            <span className="text-label-md font-label-md text-outline">{filteredBills.length} TOTAL ENTRIES</span>
+          </div>
+          <div className="overflow-x-auto data-table-container">
+            {filteredBills.length === 0 ? (
+              <div className="p-12">
+                <EmptyState
+                  icon={<span className="material-symbols-outlined text-[48px] text-outline">receipt_long</span>}
+                  title="No bills found" description="Fetch bills from Gmail or add them manually"
+                  action={<Button size="sm" onClick={handleFetchFromGmail}><span className="material-symbols-outlined text-[18px]">gmail_groups</span>Fetch from Gmail</Button>} />
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-outline-variant/30 text-[11px] text-outline">
+                    <th className="px-6 py-4"><SortHeader label="Vendor" sortable="vendor" /></th>
+                    <th className="px-6 py-4"><SortHeader label="Invoice #" sortable="invoiceNumber" /></th>
+                    <th className="px-6 py-4 text-right"><SortHeader label="Amount" sortable="amount" /></th>
+                    <th className="px-6 py-4"><SortHeader label="Due Date" sortable="dueDate" /></th>
+                    <th className="px-6 py-4"><SortHeader label="Category" sortable="category" /></th>
+                    <th className="px-6 py-4"><SortHeader label="Direction" sortable="direction" /></th>
+                    <th className="px-6 py-4"><SortHeader label="Status" sortable="status" /></th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/20">
+                  {[...filteredBills].sort(sortFn).map((bill) => (
+                    <tr key={bill.id} className="hover:bg-primary/5 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center font-bold text-primary font-numeric-data">
+                            {bill.vendor?.charAt(0) || '?'}
+                          </div>
+                          <span className="font-medium text-on-surface">{bill.vendor}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-numeric-data text-outline">{bill.invoiceNumber || '-'}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-numeric-data text-on-surface font-bold">{bill.amount.toFixed(2)} {bill.currency}</div>
+                        {bill.localAmount != null && bill.localCurrency && (
+                          <div className="text-[10px] text-outline italic">≈ {bill.localAmount.toFixed(2)} {bill.localCurrency}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-numeric-data text-outline">
+                        {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                          bill.category === 'utilities' ? 'bg-tertiary-container/10 text-tertiary border-tertiary-container/20' :
+                          bill.category === 'telecom' ? 'bg-primary-container/10 text-primary border-primary-container/20' :
+                          bill.category === 'subscription' ? 'bg-secondary-container/10 text-secondary border-secondary-container/20' :
+                          'bg-surface-container-highest text-on-surface-variant border-outline-variant/30'
+                        }`}>{bill.category}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={directionBadge(bill.direction)}>
+                          {bill.direction === 'payable' ? 'To Pay' : 'To Receive'}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={statusBadge(bill.status)}>{bill.status}</Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                          {bill.pdfUrl && (
+                            <a href={`${API_BASE}/api/bills/${bill.id}/pdf`} target="_blank" rel="noopener noreferrer"
+                              className="p-1.5 hover:bg-surface-variant rounded-md text-outline hover:text-on-surface" title="View PDF">
+                              <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                            </a>
+                          )}
+                          {bill.status === 'paid' ? (
+                            <button onClick={() => handleRevokePaid(bill)}
+                              className="p-1.5 hover:bg-surface-variant rounded-md text-outline hover:text-on-surface" title="Revoke">
+                              <span className="material-symbols-outlined text-[20px]">history</span>
+                            </button>
+                          ) : (
+                            <button onClick={() => handleMarkPaid(bill)}
+                              className="p-1.5 hover:bg-surface-variant rounded-md text-outline hover:text-on-surface" title="Mark Paid">
+                              <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+                          )}
+                          <button onClick={() => setEditingBill(bill)}
+                            className="p-1.5 hover:bg-surface-variant rounded-md text-outline hover:text-on-surface" title="Edit">
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button onClick={() => handleDelete(bill.id)}
+                            className="p-1.5 hover:bg-error-container/20 rounded-md text-outline hover:text-error" title="Delete">
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
       </div>
 
       <Modal isOpen={!!editingBill} onClose={() => setEditingBill(null)} title="Edit Bill">
@@ -300,5 +367,3 @@ export function BillsPage() {
     </div>
   );
 }
-
-

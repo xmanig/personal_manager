@@ -69,21 +69,17 @@ export function MonthView({ onSelectEvent, onSelectDate, accountId, getAccountCo
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
+    <div className="flex h-full flex-col bg-surface">
+      <div className="flex items-center justify-between border-b border-outline-variant/30 px-5 py-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
+            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </Button>
-          <h2 className="min-w-[180px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="min-w-[180px] text-center font-headline-sm text-headline-sm text-on-surface">
             {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
           </h2>
           <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
+            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </Button>
         </div>
         <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
@@ -92,7 +88,7 @@ export function MonthView({ onSelectEvent, onSelectDate, accountId, getAccountCo
       <div className="relative flex-1">
         <div className="grid h-full grid-cols-7 auto-rows-fr">
           {weekDays.map((day) => (
-            <div key={day} className="border-b border-r border-gray-200 px-2 py-1.5 text-center text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <div key={day} className="border-b border-r border-outline-variant/30 px-2 py-1.5 text-center text-xs font-medium text-outline font-label-md">
               {day}
             </div>
           ))}
@@ -101,9 +97,9 @@ export function MonthView({ onSelectEvent, onSelectDate, accountId, getAccountCo
             <div
               key={index}
               onClick={() => date && onSelectDate(date)}
-              className={`min-h-[90px] border-b border-r border-gray-100 p-1.5 transition-colors dark:border-gray-800 ${
-                date ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-900/50'
-              } ${date && isToday(date) ? 'bg-primary-50/50 dark:bg-primary-900/20' : ''}`}
+              className={`min-h-[90px] border-b border-r border-outline-variant/20 p-1.5 transition-colors ${
+                date ? 'cursor-pointer hover:bg-primary/5' : 'bg-surface-container-low'
+              } ${date && isToday(date) ? 'bg-primary/5' : ''}`}
             >
               {date && (
                 <>

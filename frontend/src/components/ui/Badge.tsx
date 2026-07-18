@@ -6,15 +6,15 @@ interface BadgeProps {
 
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
   const variants = {
-    default: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    primary: 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300',
-    success: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
-    warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-    danger: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+    default: 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/30',
+    primary: 'bg-primary-container/10 text-primary border border-primary-container/20',
+    success: 'bg-secondary-container/20 text-secondary border border-secondary-container/30',
+    warning: 'bg-tertiary-container/20 text-tertiary border border-tertiary-container/30',
+    danger: 'bg-error-container/10 text-error border border-error-container/20',
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center rounded px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${variants[variant]} ${className}`}>
       {children}
     </span>
   );

@@ -102,19 +102,19 @@ export function CalendarPage() {
   ];
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-800">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Calendar</h1>
-          <div className="flex rounded-xl border border-gray-200 bg-gray-50 p-0.5 dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex h-full flex-col bg-surface">
+      <header className="flex justify-between items-center h-16 px-8 bg-surface border-b border-outline-variant sticky top-0 z-40">
+        <div className="flex items-center gap-4">
+          <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Calendar</h2>
+          <div className="flex items-center gap-1 bg-surface-container rounded-lg p-0.5 border border-outline-variant/50">
             {views.map((v) => (
               <button
                 key={v.key}
                 onClick={() => setViewMode(v.key)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                   viewMode === v.key
-                    ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    ? 'bg-surface-container-high text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
                 {v.label}
@@ -125,55 +125,43 @@ export function CalendarPage() {
 
         <div className="flex items-center gap-3">
           {accounts.length > 1 && (
-            <select
-              value={selectedAccountId}
-              onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary-500 dark:focus:ring-primary-900/50"
-            >
+            <select value={selectedAccountId} onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface-variant focus:border-primary focus:ring-0">
               <option value="">All Accounts</option>
               {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.label || acc.email}
-                </option>
+                <option key={acc.id} value={acc.id}>{acc.label || acc.email}</option>
               ))}
             </select>
           )}
 
-          {/* Account color legend */}
           {accounts.length > 1 && !selectedAccountId && (
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-on-surface-variant">
               {accounts.map((acc) => (
                 <div key={acc.id} className="flex items-center gap-1">
-                  <div className={`h-2.5 w-2.5 rounded-full ${accountColorMap[acc.id] || 'bg-primary-500'}`} />
+                  <div className={`h-2.5 w-2.5 rounded-full ${accountColorMap[acc.id] || 'bg-primary'}`} />
                   <span>{acc.label || acc.email.split('@')[0]}</span>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <div className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+            <div className={`h-2 w-2 rounded-full ${isOnline ? 'bg-secondary' : 'bg-error'}`} />
             {isOnline ? 'Online' : 'Offline'}
           </div>
           {lastSynced && (
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              Synced {lastSynced.toLocaleTimeString()}
-            </span>
+            <span className="text-xs text-outline">Synced {lastSynced.toLocaleTimeString()}</span>
           )}
           <Button size="sm" variant="secondary" onClick={handleSync} loading={syncing} disabled={!isOnline}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-            </svg>
+            <span className="material-symbols-outlined text-[18px]">sync</span>
             Sync
           </Button>
           <Button size="sm" onClick={() => { setSelectedDate(new Date()); setShowEventForm(true); }}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <span className="material-symbols-outlined text-[18px]">add</span>
             New Event
           </Button>
         </div>
-      </div>
+      </header>
 
       <div className="relative flex-1 overflow-hidden" key={refreshKey}>
         {viewMode === 'month' && (
