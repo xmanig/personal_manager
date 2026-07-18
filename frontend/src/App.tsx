@@ -101,13 +101,13 @@ function Sidebar() {
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
       <div className="p-4">
         <div className="mb-6">
-          <svg className="w-full h-auto" viewBox="0 0 200 40" fill="none">
-            <rect width="40" height="40" rx="8" fill="url(#logo-grad)"/>
-            <path d="M12 20l4-4 4 4-4 4-4-4z" fill="#0b1326"/>
-            <path d="M20 14l-4 4 4 4 4-4-4-4z" fill="#0b1326" opacity="0.6"/>
-            <text x="52" y="28" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">pers</text>
-            <text x="98" y="28" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">Man</text>
-            <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#4d8eff"/><stop offset="1" stop-color="#adc6ff"/></linearGradient></defs>
+          <svg className="w-full h-auto" viewBox="0 0 200 56" fill="none">
+            <rect x="4" y="4" width="48" height="48" rx="10" fill="#4d8eff"/>
+            <text x="12" y="38" fill="#002e6a" fontFamily="Hanken Grotesk" fontSize="28" fontWeight="800">P</text>
+            <text x="30" y="38" fill="#002e6a" fontFamily="Hanken Grotesk" fontSize="28" fontWeight="800">M</text>
+            <rect x="4" y="4" width="48" height="48" rx="10" fill="none" stroke="#adc6ff" strokeWidth="2" opacity="0.3"/>
+            <text x="66" y="32" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="14" fontWeight="600" letterSpacing="2">PERTH</text>
+            <text x="66" y="50" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="16" fontWeight="700" letterSpacing="1">Manager</text>
           </svg>
         </div>
         <div className="space-y-1">
