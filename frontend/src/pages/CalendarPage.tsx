@@ -152,11 +152,11 @@ export function CalendarPage() {
           {lastSynced && (
             <span className="text-xs text-outline">Synced {lastSynced.toLocaleTimeString()}</span>
           )}
-          <Button size="sm" variant="secondary" onClick={handleSync} loading={syncing} disabled={!isOnline}>
+          <Button size="md" variant="secondary" onClick={handleSync} loading={syncing} disabled={!isOnline}>
             <span className="material-symbols-outlined text-[18px]">sync</span>
             Sync
           </Button>
-          <Button size="sm" onClick={() => { setSelectedDate(new Date()); setShowEventForm(true); }}>
+          <Button size="md" onClick={() => { setSelectedDate(new Date()); setShowEventForm(true); }}>
             <span className="material-symbols-outlined text-[18px]">add</span>
             New Event
           </Button>

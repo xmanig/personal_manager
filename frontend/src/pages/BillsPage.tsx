@@ -167,7 +167,7 @@ export function BillsPage() {
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               className="bg-transparent border-none focus:ring-0 text-sm p-0 w-48 text-on-surface placeholder:text-outline-variant" placeholder="Search bills..." type="text" />
           </div>
-          <Button size="sm" onClick={handleFetchFromGmail} loading={fetching}>
+          <Button size="md" onClick={handleFetchFromGmail} loading={fetching}>
             <span className="material-symbols-outlined text-[18px]">gmail_groups</span>
             {fetching ? 'Fetching...' : 'Fetch from Gmail'}
           </Button>
