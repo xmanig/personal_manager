@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Note } from '../types';
 import { updateNote } from '../lib/api';
 
@@ -155,7 +156,7 @@ export function MarkdownEditor({ note, onSave }: MarkdownEditorProps) {
         {showPreview ? (
           <div className="h-full overflow-y-auto px-6 py-4">
             <div className="markdown max-w-3xl">
-              <ReactMarkdown>{content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </div>
           </div>
         ) : (

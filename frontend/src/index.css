@@ -123,3 +123,9 @@ body {
 .markdown a { @apply text-primary underline hover:text-primary-container; }
 .markdown hr { @apply border-outline-variant/30 my-6; }
 .markdown img { @apply max-w-full rounded-xl; }
+.markdown table { @apply w-full border-collapse mb-4; }
+.markdown th, .markdown td { @apply border border-outline-variant/30 px-4 py-2 text-left text-sm; }
+.markdown th { @apply bg-surface-container-high text-on-surface font-bold font-label-md text-[11px] uppercase tracking-wider; }
+.markdown td { @apply text-on-surface-variant; }
+.markdown tr:nth-child(even) td { @apply bg-surface-container-low; }
+
