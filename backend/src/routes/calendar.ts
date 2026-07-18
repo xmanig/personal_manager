@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireGoogleAuth } from '../middleware/auth';
+import { validate, createEventSchema } from '../lib/validation';
 
 const router = Router();
 
@@ -104,14 +105,9 @@ router.get('/calendar/events/local', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/calendar/events', requireGoogleAuth, async (req: Request, res: Response) => {
+router.post('/calendar/events', requireGoogleAuth, validate(createEventSchema), async (req: Request, res: Response) => {
   try {
     const { title, description, startTime, endTime, location, isAllDay, googleAccountId } = req.body;
-
-    if (!title || !startTime || !endTime) {
-      res.status(400).json({ error: 'Title, startTime, and endTime are required' });
-      return;
-    }
 
     const calendar = (req as any).googleAuth;
     const googleAccount = (req as any).googleAccount;
