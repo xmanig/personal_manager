@@ -88,7 +88,7 @@ export async function downloadAttachment(
   return Buffer.from(res.data.data, 'base64url');
 }
 
-function buildGmailQuery(rules: GmailSearchRule): string {
+export function buildGmailQuery(rules: GmailSearchRule): string {
   const parts: string[] = [];
 
   if (rules.senderContains) {
@@ -110,7 +110,7 @@ function buildGmailQuery(rules: GmailSearchRule): string {
   return parts.join(' ') || 'has:attachment';
 }
 
-function extractAttachments(
+export function extractAttachments(
   payload: any
 ): { filename: string; mimeType: string; attachmentId: string }[] {
   const attachments: { filename: string; mimeType: string; attachmentId: string }[] = [];
