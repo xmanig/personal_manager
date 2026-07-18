@@ -49,14 +49,16 @@ export const parseBillSchema = z.object({
 });
 
 export const createEventSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  title: z.string().min(1, 'Title is required').max(500),
+  description: z.string().max(5000).optional(),
   startTime: z.string().min(1, 'startTime is required'),
   endTime: z.string().min(1, 'endTime is required'),
-  location: z.string().optional(),
+  location: z.string().max(500).optional(),
   isAllDay: z.boolean().optional(),
   googleAccountId: z.string().optional(),
 });
+
+export const updateEventSchema = createEventSchema.partial();
 
 export const updateLabelSchema = z.object({
   label: z.string().min(1, 'Label is required'),

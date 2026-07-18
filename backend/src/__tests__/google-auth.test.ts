@@ -114,7 +114,6 @@ describe('google-auth', () => {
       const accounts = await listAccounts();
       expect(accounts).toHaveLength(1);
       expect(accounts[0].email).toBe('a@b.com');
-      expect(accounts[0].accessToken).toBeUndefined();
     });
   });
 

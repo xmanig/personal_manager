@@ -2,7 +2,7 @@ import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireGoogleAuth } from '../middleware/auth';
-import { validate, createEventSchema } from '../lib/validation';
+import { validate, createEventSchema, updateEventSchema } from '../lib/validation';
 
 const router = Router();
 
@@ -159,7 +159,7 @@ router.post('/calendar/events', requireGoogleAuth, validate(createEventSchema), 
   }
 });
 
-router.put('/calendar/events/:id', requireGoogleAuth, async (req: Request, res: Response) => {
+router.put('/calendar/events/:id', requireGoogleAuth, validate(updateEventSchema), async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     const { title, description, startTime, endTime, location } = req.body;
