@@ -211,7 +211,7 @@ function Sidebar() {
               <button
                 onClick={handleDisconnect}
                 disabled={loading}
-                className="w-full py-2 text-[11px] font-bold text-error uppercase tracking-widest font-label-md bg-error-container/10 border border-error-container/20 rounded-lg hover:bg-error-container/20 transition-colors"
+                className="w-full py-1 text-[11px] text-outline hover:text-error transition-colors"
               >
                 {loading ? 'Disconnecting...' : 'Disconnect All'}
               </button>
