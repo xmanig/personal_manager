@@ -173,6 +173,8 @@ router.get('/notes/search', async (req: Request, res: Response) => {
     const searchTerm = q
       .split(/\s+/)
       .filter(Boolean)
+      .map((term) => term.replace(/[^a-zA-Z0-9]/g, ''))
+      .filter(Boolean)
       .map((term) => `${term}:*`)
       .join(' & ');
 
@@ -283,6 +285,8 @@ router.post('/notes/smart-search', async (req: Request, res: Response) => {
 
       const searchTerm = query
         .split(/\s+/)
+        .filter(Boolean)
+        .map((t: string) => t.replace(/[^a-zA-Z0-9]/g, ''))
         .filter(Boolean)
         .map((t: string) => `${t}:*`)
         .join(' & ');
