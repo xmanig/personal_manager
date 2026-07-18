@@ -57,6 +57,7 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
 });
 
 router.get('/auth/status', async (req: Request, res: Response) => {
+  // Intentionally no auth middleware — used to check if connected
   try {
     const defaultAccount = await getDefaultAccount();
     if (!defaultAccount) {

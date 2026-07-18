@@ -1,8 +1,10 @@
 import { logger } from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { requireGoogleAuth } from '../middleware/auth';
 
 const router = Router();
+router.use(requireGoogleAuth);
 
 router.get('/tags', async (req: Request, res: Response) => {
   try {

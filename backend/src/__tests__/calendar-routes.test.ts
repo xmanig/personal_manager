@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
+vi.mock('../middleware/auth', () => ({
+  requireGoogleAuth: (_req: any, _res: any, next: any) => next(),
+}));
 
 const mockPrisma = vi.hoisted(() => ({
   googleAccount: {

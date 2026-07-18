@@ -83,7 +83,7 @@ async function processGmailAttachment(
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', requireGoogleAuth, async (req, res) => {
   try {
     const bills = await prisma.bill.findMany({
       orderBy: { createdAt: 'desc' },
@@ -95,7 +95,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireGoogleAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({
       where: { id: String(req.params.id) },
@@ -111,7 +111,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', validate(updateBillSchema), async (req, res) => {
+router.put('/:id', requireGoogleAuth, validate(updateBillSchema), async (req, res) => {
   try {
     const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, localAmount, localCurrency, lineItems } =
       req.body;
@@ -140,7 +140,7 @@ router.put('/:id', validate(updateBillSchema), async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireGoogleAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
     if (!bill) {
@@ -237,7 +237,7 @@ router.post('/parse', requireGoogleAuth, validate(parseBillSchema), async (req, 
   }
 });
 
-router.get('/:id/pdf', async (req, res) => {
+router.get('/:id/pdf', requireGoogleAuth, async (req, res) => {
   try {
     const bill = await prisma.bill.findUnique({ where: { id: String(req.params.id) } });
     if (!bill || !bill.pdfUrl) {
