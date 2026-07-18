@@ -151,26 +151,22 @@ router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, 
       return;
     }
 
-    const needsReconnect = account.tokenExpiry.getTime() < Date.now();
-
     let email = account.email;
-    if (!needsReconnect) {
-      try {
-        const client = createOAuth2Client();
-        client.setCredentials({
-          access_token: decrypt(account.accessToken),
-          refresh_token: decrypt(account.refreshToken),
-        });
-        const oauth2 = google.oauth2({ version: 'v2', auth: client });
-        const { data } = await oauth2.userinfo.get();
-        if (data.email) email = data.email;
-      } catch {
-        res.json({ id: accountId, email: account.email, needsReconnect: true });
-        return;
-      }
+    try {
+      const client = createOAuth2Client();
+      client.setCredentials({
+        access_token: decrypt(account.accessToken),
+        refresh_token: decrypt(account.refreshToken),
+      });
+      const oauth2 = google.oauth2({ version: 'v2', auth: client });
+      const { data } = await oauth2.userinfo.get();
+      if (data.email) email = data.email;
+    } catch {
+      res.json({ id: accountId, email: account.email, needsReconnect: true });
+      return;
     }
 
-    res.json({ id: accountId, email, label: account.label, isDefault: account.isDefault, needsReconnect });
+    res.json({ id: accountId, email, label: account.label, isDefault: account.isDefault, needsReconnect: false });
   } catch (error) {
     logger.error({ err: error }, 'Failed to check account status:');
     res.status(500).json({ error: 'Failed to check account status' });
