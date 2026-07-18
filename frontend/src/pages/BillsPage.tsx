@@ -168,7 +168,7 @@ export function BillsPage() {
               className="bg-transparent border-none focus:ring-0 text-sm p-0 w-48 text-on-surface placeholder:text-outline-variant" placeholder="Search bills..." type="text" />
           </div>
           <Button size="md" onClick={handleFetchFromGmail} loading={fetching}>
-            <span className="material-symbols-outlined text-[18px]">gmail_groups</span>
+            <span className="material-symbols-outlined text-[18px]">forward_to_inbox</span>
             {fetching ? 'Fetching...' : 'Fetch from Gmail'}
           </Button>
         </div>
@@ -266,7 +266,7 @@ export function BillsPage() {
                 <EmptyState
                   icon={<span className="material-symbols-outlined text-[48px] text-outline">receipt_long</span>}
                   title="No bills found" description="Fetch bills from Gmail or add them manually"
-                  action={<Button size="sm" onClick={handleFetchFromGmail}><span className="material-symbols-outlined text-[18px]">gmail_groups</span>Fetch from Gmail</Button>} />
+                  action={<Button size="sm" onClick={handleFetchFromGmail}><span className="material-symbols-outlined text-[18px]">forward_to_inbox</span>Fetch from Gmail</Button>} />
               </div>
             ) : (
               <table className="w-full text-left border-collapse">
