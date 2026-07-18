@@ -106,8 +106,8 @@ function Sidebar() {
             <text x="12" y="38" fill="#002e6a" fontFamily="Hanken Grotesk" fontSize="28" fontWeight="800">P</text>
             <text x="30" y="38" fill="#002e6a" fontFamily="Hanken Grotesk" fontSize="28" fontWeight="800">M</text>
             <rect x="4" y="4" width="48" height="48" rx="10" fill="none" stroke="#adc6ff" strokeWidth="2" opacity="0.3"/>
-            <text x="66" y="32" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="14" fontWeight="600" letterSpacing="2">PERTH</text>
-            <text x="66" y="50" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="16" fontWeight="700" letterSpacing="1">Manager</text>
+            <text x="66" y="36" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">pers</text>
+            <text x="110" y="36" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="20" fontWeight="700">Man</text>
           </svg>
         </div>
         <div className="space-y-1">
