@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { google } from 'googleapis';
 import {
   getAuthUrl,
   getTokensFromCode,
@@ -8,8 +9,11 @@ import {
   deleteAccount,
   setDefaultAccount,
   getDefaultAccount,
+  createOAuth2Client,
 } from '../services/google-auth';
 import { requireGoogleAuth } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
+import { decrypt } from '../lib/encryption';
 
 const router = Router();
 
@@ -30,9 +34,9 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
   try {
     const tokens = await getTokensFromCode(code);
 
-    const client = (await import('../services/google-auth')).createOAuth2Client();
+    const client = createOAuth2Client();
     client.setCredentials(tokens);
-    const oauth2 = (await import('googleapis')).google.oauth2({ version: 'v2', auth: client });
+    const oauth2 = google.oauth2({ version: 'v2', auth: client });
     const { data } = await oauth2.userinfo.get();
     const email = data.email || '';
 
@@ -108,7 +112,6 @@ router.put('/auth/accounts/:id/default', requireGoogleAuth, async (req: Request,
 router.put('/auth/accounts/:id/label', requireGoogleAuth, async (req: Request, res: Response) => {
   try {
     const { label } = req.body;
-    const { prisma } = await import('../lib/prisma');
     await prisma.googleAccount.update({
       where: { id: String(req.params.id) },
       data: { label },
@@ -123,7 +126,6 @@ router.put('/auth/accounts/:id/label', requireGoogleAuth, async (req: Request, r
 router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Request, res: Response) => {
   try {
     const accountId = String(req.params.id);
-    const { prisma } = await import('../lib/prisma');
     const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
     if (!account) {
       res.status(404).json({ error: 'Account not found' });
@@ -140,7 +142,6 @@ router.post('/auth/accounts/:id/reconnect', requireGoogleAuth, async (req: Reque
 router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, res: Response) => {
   try {
     const accountId = String(req.params.id);
-    const { prisma } = await import('../lib/prisma');
     const account = await prisma.googleAccount.findUnique({ where: { id: accountId } });
     if (!account) {
       res.status(404).json({ error: 'Account not found' });
@@ -152,13 +153,12 @@ router.get('/auth/accounts/:id/status', requireGoogleAuth, async (req: Request, 
     let email = account.email;
     if (!needsReconnect) {
       try {
-        const client = (await import('../services/google-auth')).createOAuth2Client();
-        const { decrypt } = await import('../lib/encryption');
+        const client = createOAuth2Client();
         client.setCredentials({
           access_token: decrypt(account.accessToken),
           refresh_token: decrypt(account.refreshToken),
         });
-        const oauth2 = (await import('googleapis')).google.oauth2({ version: 'v2', auth: client });
+        const oauth2 = google.oauth2({ version: 'v2', auth: client });
         const { data } = await oauth2.userinfo.get();
         if (data.email) email = data.email;
       } catch {

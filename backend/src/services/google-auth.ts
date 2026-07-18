@@ -208,17 +208,7 @@ export async function getAuthenticatedClient(accountId?: string) {
 
   if (account.tokenExpiry.getTime() < Date.now()) {
     try {
-      const { credentials } = await client.refreshAccessToken();
-
-      await prisma.googleAccount.update({
-        where: { id: account.id },
-        data: {
-          accessToken: encrypt(credentials.access_token || ''),
-          refreshToken: encrypt(credentials.refresh_token || account.refreshToken),
-          tokenExpiry: credentials.expiry_date ? new Date(credentials.expiry_date) : account.tokenExpiry,
-        },
-      });
-
+      const credentials = await refreshAccountTokens(account.id);
       client.setCredentials(credentials);
     } catch {
       throw new Error(`Failed to refresh tokens for account ${account.email}. Please re-authenticate.`);
