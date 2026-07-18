@@ -14,6 +14,7 @@ import {
 import { requireGoogleAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { decrypt } from '../lib/encryption';
+import { validate, updateLabelSchema } from '../lib/validation';
 
 const router = Router();
 
@@ -109,7 +110,7 @@ router.put('/auth/accounts/:id/default', requireGoogleAuth, async (req: Request,
   }
 });
 
-router.put('/auth/accounts/:id/label', requireGoogleAuth, async (req: Request, res: Response) => {
+router.put('/auth/accounts/:id/label', requireGoogleAuth, validate(updateLabelSchema), async (req: Request, res: Response) => {
   try {
     const { label } = req.body;
     await prisma.googleAccount.update({

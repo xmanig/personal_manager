@@ -6,6 +6,7 @@ import { searchBillEmails, downloadAttachment, GmailBillEmail } from '../service
 import { parsePdf } from '../services/pdf-parser';
 import { extractBillData } from '../services/bill-extractor';
 import { convertToLocal } from '../services/forex';
+import { validate, updateBillSchema, fetchGmailSchema, parseBillSchema } from '../lib/validation';
 import fs from 'fs';
 import path from 'path';
 
@@ -109,7 +110,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', validate(updateBillSchema), async (req, res) => {
   try {
     const { vendor, amount, currency, dueDate, paidDate, category, status, notes, invoiceNumber, localAmount, localCurrency, lineItems } =
       req.body;
@@ -161,7 +162,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-router.post('/fetch-gmail', requireGoogleAuth, async (req, res) => {
+router.post('/fetch-gmail', requireGoogleAuth, validate(fetchGmailSchema), async (req, res) => {
   try {
     const { rules, googleAccountId } = req.body;
     const oauth2Client = (req as any).googleAuth;
@@ -223,13 +224,9 @@ router.post('/fetch-gmail-all', requireGoogleAuth, async (req, res) => {
   }
 });
 
-router.post('/parse', requireGoogleAuth, async (req, res) => {
+router.post('/parse', requireGoogleAuth, validate(parseBillSchema), async (req, res) => {
   try {
     const { rawText } = req.body;
-    if (!rawText) {
-      res.status(400).json({ error: 'rawText is required' });
-      return;
-    }
 
     const extraction = await extractBillData(rawText);
     res.json(extraction);
