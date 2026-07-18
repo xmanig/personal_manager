@@ -99,15 +99,9 @@ function Sidebar() {
 
   return (
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
-      <div className="p-6">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-8 h-8 flex items-center justify-center">
-            <img src={logo} alt="Logo" className="h-8 w-8" />
-          </div>
-          <div>
-            <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight">Personal Manager</h1>
-            <p className="text-on-surface-variant text-[10px] tracking-widest uppercase font-label-md">Management Suite</p>
-          </div>
+      <div className="p-4">
+        <div className="mb-6">
+          <img src={logo} alt="Logo" className="w-full h-auto" />
         </div>
         <div className="space-y-1">
           <p className="text-[11px] font-bold text-outline uppercase tracking-wider px-4 mb-2 font-label-md">Main Menu</p>
