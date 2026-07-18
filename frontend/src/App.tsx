@@ -101,7 +101,14 @@ function Sidebar() {
     <nav className="fixed left-0 top-0 h-full w-[280px] bg-surface-container border-r border-outline-variant flex flex-col z-50">
       <div className="p-4">
         <div className="mb-6">
-          <img src={logo} alt="Logo" className="w-1/2 h-auto mx-auto mix-blend-screen" />
+          <svg className="w-1/2 h-auto mx-auto" viewBox="0 0 200 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="url(#logo-grad)"/>
+            <path d="M12 20l4-4 4 4-4 4-4-4z" fill="#0b1326"/>
+            <path d="M20 14l-4 4 4 4 4-4-4-4z" fill="#0b1326" opacity="0.6"/>
+            <text x="52" y="28" fill="#dae2fd" fontFamily="Hanken Grotesk" fontSize="18" fontWeight="700">personal</text>
+            <text x="122" y="28" fill="#adc6ff" fontFamily="Hanken Grotesk" fontSize="18" fontWeight="700">manager</text>
+            <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#4d8eff"/><stop offset="1" stop-color="#adc6ff"/></linearGradient></defs>
+          </svg>
         </div>
         <div className="space-y-1">
           <p className="text-[11px] font-bold text-outline uppercase tracking-wider px-4 mb-2 font-label-md">Main Menu</p>
