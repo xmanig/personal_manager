@@ -4,6 +4,7 @@ import express from 'express';
 
 vi.mock('../middleware/auth', () => ({
   requireGoogleAuth: (_req: any, _res: any, next: any) => next(),
+  requireOptionalAuth: (_req: any, _res: any, next: any) => next(),
 }));
 
 const mockPrisma = vi.hoisted(() => ({
